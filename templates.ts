@@ -1,1 +1,7 @@
-export const interactionModel = {};
+export const interactionModel = {
+  interactionModel: {
+    languageModel: {},
+    dialog: {},
+    prompts: [],
+  },
+};

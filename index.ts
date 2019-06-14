@@ -1,17 +1,18 @@
+import fs from "fs";
+import { basename, join } from "path";
 import { config } from "dotenv";
-import {
-  ErrorHandler,
-  HandlerInput,
-  RequestHandler,
-  SkillBuilders,
-} from "ask-sdk-core";
-import { Response, SessionEndedRequest } from "ask-sdk-model";
-import { getProjectData } from "./lib";
-// import * as templates from "./templates";
+// import {
+//   ErrorHandler,
+//   HandlerInput,
+//   RequestHandler,
+//   SkillBuilders,
+// } from "ask-sdk-core";
+// import { Response, SessionEndedRequest } from "ask-sdk-model";
+import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
 
 config();
 
-type ProjectResponse = {
+export type ProjectResponse = {
   errors?: { error: string }[];
   data: any[];
 };
@@ -27,7 +28,18 @@ try {
     for (const { error } of project.errors) {
       throw new Error(error);
     }
-    console.log(project.data);
+    const outputPath = join(__dirname, process.argv[2] || "output");
+    // try to read from the output path; if possible, we do not needto create it
+    try {
+      await fs.promises.access(outputPath, fs.constants.R_OK);
+    } catch (_) {
+      await fs.promises.mkdir(outputPath);
+    }
+    const data = JSON.stringify(mapProjectDataToInteractionModel(project.data));
+    await fs.promises.writeFile(`${outputPath}/en-US.json`, data);
+    console.log(
+      `Completed writing interaction model to /${basename(outputPath)}`
+    );
   })();
 } catch (err) {
   console.error(err);
