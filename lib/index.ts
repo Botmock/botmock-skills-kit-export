@@ -1,4 +1,6 @@
 import fetch from "node-fetch";
+import { ProjectResponse } from "../";
+// import * as templates from "./templates";
 
 interface ProjectVariables {
   projectId?: string;
@@ -28,4 +30,10 @@ export async function getProjectData(projectVariables: ProjectVariables) {
     data: data.filter(d => !d.hasOwnProperty("error")),
     errors: data.filter(d => d.hasOwnProperty("error")),
   };
+}
+
+export async function mapProjectDataToInteractionModel(
+  data: Partial<ProjectResponse>
+) {
+  return {};
 }
