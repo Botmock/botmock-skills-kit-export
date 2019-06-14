@@ -1,3 +1,4 @@
+import { config } from "dotenv";
 import {
   ErrorHandler,
   HandlerInput,
@@ -7,6 +8,8 @@ import {
 import { Response, SessionEndedRequest } from "ask-sdk-model";
 import { getProjectData } from "./lib";
 // import * as templates from "./templates";
+
+config();
 
 type ProjectResponse = {
   errors?: { error: string }[];
@@ -18,7 +21,7 @@ try {
     const project: ProjectResponse = await getProjectData({
       projectId: process.env.BOTMOCK_PROJECT_ID,
       boardId: process.env.BOTMOCK_BOARD_ID,
-      teamId: process.env.BOTMOCK_TEAMID,
+      teamId: process.env.BOTMOCK_TEAM_ID,
       token: process.env.BOTMOCK_TOKEN,
     });
     for (const { error } of project.errors) {
