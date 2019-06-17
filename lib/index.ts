@@ -32,7 +32,6 @@ export async function getProjectData(projectVariables: ProjectVariables) {
   };
 }
 
-<<<<<<< HEAD
 export function mapProjectDataToInteractionModel(data: any[]) {
   const DEFAULT_INTENTS = [
     {
@@ -52,10 +51,4 @@ export function mapProjectDataToInteractionModel(data: any[]) {
       samples: [],
     },
   ];
-=======
-export async function mapProjectDataToInteractionModel(
-  data: Partial<ProjectResponse>
-) {
->>>>>>> 51ab1ab2c8e5c1008e9284d917dd3c0a3a7b6710
-  return {};
 }
