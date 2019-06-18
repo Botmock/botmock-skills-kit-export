@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
-// import * as templates from "./templates";
+import * as templates from "../templates";
 
 interface ProjectVariables {
   projectId?: string;
@@ -33,22 +33,6 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 }
 
 export function mapProjectDataToInteractionModel(data: any[]) {
-  const DEFAULT_INTENTS = [
-    {
-      name: "AMAZON.CancelIntent",
-      samples: [],
-    },
-    {
-      name: "AMAZON.HelpIntent",
-      samples: [],
-    },
-    {
-      name: "AMAZON.StopIntent",
-      samples: [],
-    },
-    {
-      name: "AMAZON.FallbackIntent",
-      samples: [],
-    },
-  ];
+  console.log(Object.keys(data));
+  return templates.interactionModel;
 }
