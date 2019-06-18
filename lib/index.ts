@@ -1,6 +1,32 @@
 import fetch from "node-fetch";
+// import { createIntentMap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
 import { interactionModel } from "../templates";
+
+type DialogIntent = {
+  name: string;
+  configurationRequired?: boolean;
+  slots: {
+    name: string;
+    type: string;
+    elicitationRequired: boolean;
+    confirmationRequired: boolean;
+    prompts: { elicitation: string };
+    samples?: string[];
+  }[];
+};
+
+type InteractionModel = {
+  languageModel: {
+    invocationName: string;
+    intents?: Partial<DialogIntent>[];
+    types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
+  };
+  dialog: {
+    intents: DialogIntent[];
+  };
+  prompts: { id: string; variations: { type: string; value: string }[] }[];
+};
 
 interface ProjectVariables {
   projectId?: string;
@@ -32,36 +58,14 @@ export async function getProjectData(projectVariables: ProjectVariables) {
   };
 }
 
-type DialogIntent = {
-  name: string;
-  configurationRequired?: boolean;
-  slots: {
-    name: string;
-    type: string;
-    elicitationRequired: boolean;
-    confirmationRequired: boolean;
-    prompts: { elicitation: string };
-    samples?: string[];
-  }[];
-};
-
-type InteractionModel = {
-  languageModel: {
-    invocationName: string;
-    intents?: Partial<DialogIntent>[];
-  };
-  dialog: {
-    intents: DialogIntent[];
-  };
-  prompts: { id: string; variations: { type: string; value: string }[] }[];
-};
-
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
   const [intents, entities, board, project] = data;
+  console.log(intents.map(i => i.utterances));
   const dialog = {};
   const prompts = [];
+  // console.log(createIntentMap(board.messages, intents));
   interactionModel.languageModel.invocationName = project.name;
   return {
     ...interactionModel,

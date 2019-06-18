@@ -35,6 +35,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@botmock-api/utils": "1.0.5",
     "ask-sdk-core": "2.6.0",
     "ask-sdk-model": "1.16.0",
     "dotenv": "8.0.0",

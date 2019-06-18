@@ -21,6 +21,7 @@ export const interactionModel = {
   languageModel: {
     invocationName: "",
     intents: DEFAULT_INTENTS,
+    types: [],
   },
   dialog: {},
   prompts: [],
