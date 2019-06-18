@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import { join } from "path";
 import fs from "fs";
+// import * as lib from "../lib";
 
 test("can read from output directory after `npm start`", () => {
   const stdout = execSync("npm start");

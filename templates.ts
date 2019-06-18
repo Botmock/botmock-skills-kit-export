@@ -18,12 +18,10 @@ const DEFAULT_INTENTS = [
 ];
 
 export const interactionModel = {
-  interactionModel: {
-    languageModel: {
-      invocationName: "",
-      intents: DEFAULT_INTENTS,
-    },
-    dialog: {},
-    prompts: [],
+  languageModel: {
+    invocationName: "",
+    intents: DEFAULT_INTENTS,
   },
+  dialog: {},
+  prompts: [],
 };

@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
-import * as templates from "../templates";
+import { interactionModel } from "../templates";
 
 interface ProjectVariables {
   projectId?: string;
@@ -16,7 +16,7 @@ export async function getProjectData(projectVariables: ProjectVariables) {
   const baseUrl = `${BOTMOCK_API_URL}/teams/${teamId}/projects/${projectId}`;
   // collect project data from endpoints
   const data = await Promise.all(
-    ["intents", `boards/${boardId}`].map(async path => {
+    ["intents", "entities", `boards/${boardId}`, ""].map(async path => {
       const res = await (await fetch(`${baseUrl}/${path}`, {
         headers: {
           Accept: "application/json",
@@ -32,7 +32,46 @@ export async function getProjectData(projectVariables: ProjectVariables) {
   };
 }
 
-export function mapProjectDataToInteractionModel(data: any[]) {
-  console.log(Object.keys(data));
-  return templates.interactionModel;
+type DialogIntent = {
+  name: string;
+  configurationRequired?: boolean;
+  slots: {
+    name: string;
+    type: string;
+    elicitationRequired: boolean;
+    confirmationRequired: boolean;
+    prompts: { elicitation: string };
+    samples?: string[];
+  }[];
+};
+
+type InteractionModel = {
+  languageModel: {
+    invocationName: string;
+    intents?: Partial<DialogIntent>[];
+  };
+  dialog: {
+    intents: DialogIntent[];
+  };
+  prompts: { id: string; variations: { type: string; value: string }[] }[];
+};
+
+export function mapProjectDataToInteractionModel(
+  data: any[]
+): InteractionModel {
+  const [intents, entities, board, project] = data;
+  const dialog = {};
+  const prompts = [];
+  interactionModel.languageModel.invocationName = project.name;
+  return {
+    ...interactionModel,
+    dialog: {
+      intents: intents.map(intent => ({
+        name: intent.name,
+        configurationRequired: false,
+        slots: [],
+      })),
+    },
+    prompts,
+  };
 }
