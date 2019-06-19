@@ -35,7 +35,8 @@ try {
     } catch (_) {
       await fs.promises.mkdir(outputPath);
     }
-    const data = JSON.stringify(mapProjectDataToInteractionModel(project.data));
+    const interactionModel = mapProjectDataToInteractionModel(project.data);
+    const data = JSON.stringify({ interactionModel });
     await fs.promises.writeFile(`${outputPath}/en-US.json`, data);
     console.log(
       `Completed writing interaction model to /${basename(outputPath)}`

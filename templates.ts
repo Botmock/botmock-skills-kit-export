@@ -1,4 +1,4 @@
-const DEFAULT_INTENTS = [
+export const DEFAULT_INTENTS = [
   {
     name: "AMAZON.CancelIntent",
     samples: [],
@@ -16,13 +16,3 @@ const DEFAULT_INTENTS = [
     samples: [],
   },
 ];
-
-export const interactionModel = {
-  languageModel: {
-    invocationName: "",
-    intents: DEFAULT_INTENTS,
-    types: [],
-  },
-  dialog: {},
-  prompts: [],
-};

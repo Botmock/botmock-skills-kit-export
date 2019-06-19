@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
-import { createIntentMap } from "@botmock-api/utils";
+// import { createIntentMap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
-import { interactionModel } from "../templates";
+import { DEFAULT_INTENTS } from "../templates";
 
 type DialogIntent = {
   name: string;
@@ -16,16 +16,18 @@ type DialogIntent = {
   }[];
 };
 
+type Prompt = { id: string; variations: { type: string; value: string }[] };
+
 type InteractionModel = {
   languageModel: {
     invocationName: string;
     intents?: Partial<DialogIntent>[];
     types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
   };
-  dialog: {
+  dialog?: {
     intents: DialogIntent[];
   };
-  prompts: { id: string; variations: { type: string; value: string }[] }[];
+  prompts?: Prompt[];
 };
 
 interface ProjectVariables {
@@ -64,17 +66,17 @@ export function mapProjectDataToInteractionModel(
   const [intents, entities, board, project] = data;
   const dialog = {};
   const prompts = [];
-  console.log(createIntentMap(board.messages, intents));
-  interactionModel.languageModel.invocationName = project.name;
   return {
-    ...interactionModel,
-    dialog: {
-      intents: intents.map(intent => ({
-        name: intent.name,
-        configurationRequired: false,
-        slots: [],
-      })),
+    languageModel: {
+      invocationName: project.name,
+      intents: DEFAULT_INTENTS.concat(
+        intents.map(intent => ({
+          name: intent.name,
+          samples: intent.utterances.map(utterance => utterance.text),
+          slots: [],
+        }))
+      ),
+      types: [],
     },
-    prompts,
   };
 }

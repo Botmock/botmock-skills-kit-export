@@ -1,6 +1,4 @@
 .env
-sample.json
-out
 output
 node_modules
 npm-debug.log

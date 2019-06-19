@@ -36,3 +36,10 @@ BOTMOCK_PROJECT_ID="@YOUR-BOTMOCK-PROJECT-ID"
 ```shell
 npm start
 ```
+
+By default, the generated file appears in `/output`. This can be changed by including the
+path to the desired output directory after the `start` command:
+
+```shell
+npm start model
+```

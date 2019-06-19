@@ -1,1 +1,44 @@
-{"languageModel":{"invocationName":"beatles","intents":[{"name":"AMAZON.CancelIntent","samples":[]},{"name":"AMAZON.HelpIntent","samples":[]},{"name":"AMAZON.StopIntent","samples":[]},{"name":"AMAZON.FallbackIntent","samples":[]}],"types":[]},"dialog":{"intents":[{"name":"no","configurationRequired":false,"slots":[]},{"name":"yes","configurationRequired":false,"slots":[]}]},"prompts":[]}
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "beatles",
+      "intents": [
+        { "name": "AMAZON.CancelIntent", "samples": [] },
+        { "name": "AMAZON.HelpIntent", "samples": [] },
+        { "name": "AMAZON.StopIntent", "samples": [] },
+        { "name": "AMAZON.FallbackIntent", "samples": [] },
+        {
+          "name": "no",
+          "samples": [
+            "no, thanks",
+            "no",
+            "not ever",
+            "never!",
+            "in fact, not ever, really!",
+            "nada",
+            "niet",
+            "nope!",
+            "not totally!",
+            "nooo!"
+          ]
+        },
+        {
+          "name": "yes",
+          "samples": [
+            "sure",
+            "definitely!",
+            "certain!",
+            "certainly",
+            "okay, then",
+            "yep",
+            "yes",
+            "certainly for certain!",
+            "indeed",
+            "indubitably"
+          ]
+        }
+      ],
+      "types": []
+    }
+  }
+}
