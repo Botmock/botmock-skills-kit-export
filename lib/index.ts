@@ -4,9 +4,10 @@ import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
 type DialogIntent = {
-  name: string;
   configurationRequired?: boolean;
-  slots: {
+  name: string;
+  samples: string[];
+  slots?: {
     name: string;
     type: string;
     elicitationRequired: boolean;
@@ -64,8 +65,6 @@ export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
   const [intents, , , project] = data;
-  // console.log(entities[0]);
-  // console.log(board);
   return {
     languageModel: {
       invocationName: project.name,
@@ -73,7 +72,10 @@ export function mapProjectDataToInteractionModel(
         intents.map(intent => ({
           name: intent.name,
           samples: intent.utterances.map(utterance => utterance.text),
-          slots: [],
+          // slots become a map of the utterances that have variables defined
+          slots: intent.utterances
+            .filter(utterance => utterance.variables.length > 0)
+            .reduce((acc, utterance) => acc, []),
         }))
       ),
       types: [],
