@@ -12,12 +12,14 @@ test("can read from output directory after running start script", () => {
   }).not.toThrow();
 });
 
-test("produces interaction model from project data", () => {
+test("interaction model generation fails when given bad project data", () => {
   expect.assertions(1);
   expect(() => {
     lib.mapProjectDataToInteractionModel([]);
   }).toThrow();
 });
+
+test.todo("produces interaction model from project data");
 
 test("creates directory named from provided command line flag", () => {
   execSync("npm start model");
