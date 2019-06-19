@@ -1,6 +1,6 @@
 # botmock-skills-kit-export
 
-export a Botmock project to Alexa Skills Kit
+Generates an [Alexa Interaction Model](https://developer.amazon.com/docs/smapi/interaction-model-schema.html) from a Botmock project
 
 ## prerequisites
 
