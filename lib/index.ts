@@ -64,7 +64,7 @@ export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
   const [intents, , , project] = data;
-  // console.log(entities);
+  // console.log(entities[0]);
   // console.log(board);
   return {
     languageModel: {
