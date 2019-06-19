@@ -63,9 +63,9 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
-  const [intents, entities, board, project] = data;
-  const dialog = {};
-  const prompts = [];
+  const [intents, , , project] = data;
+  // console.log(entities);
+  // console.log(board);
   return {
     languageModel: {
       invocationName: project.name,
