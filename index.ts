@@ -1,5 +1,5 @@
 import fs from "fs";
-import { normalize, basename, join } from "path";
+import { basename, join } from "path";
 import { config } from "dotenv";
 // import {
 //   ErrorHandler,
@@ -28,7 +28,7 @@ try {
     for (const { error } of project.errors) {
       throw new Error(error);
     }
-    const outputPath = join(__dirname, normalize(process.argv[2]) || "output");
+    const outputPath = join(__dirname, process.argv[2] || "output");
     // try to read from the output path; if possible, we do not need to create it
     try {
       await fs.promises.access(outputPath, fs.constants.R_OK);

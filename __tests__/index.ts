@@ -6,9 +6,9 @@ import * as lib from "../lib";
 test("can read from output directory after `npm start`", () => {
   const stdout = execSync("npm start");
   expect.assertions(2);
-  expect(Buffer.from(stdout).length).toBe(147);
+  expect(Buffer.from(stdout).length).not.toBe(0);
   expect(async () => {
-    await fs.promises.access(join(process.cwd(), "output"));
+    await fs.promises.access(join(process.cwd(), "output"), fs.constants.R_OK);
   }).not.toThrow();
 });
 
@@ -18,4 +18,9 @@ test("produces interaction model from project data", () => {
   }).toThrow();
 });
 
-test.todo("creates directory named from provided command line flag");
+test("creates directory named from provided command line flag", () => {
+  execSync("npm start model");
+  expect(async () => {
+    await fs.promises.access(join(process.cwd(), "model"), fs.constants.R_OK);
+  }).not.toThrow();
+});
