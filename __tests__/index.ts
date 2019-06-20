@@ -19,7 +19,10 @@ test("interaction model generation fails when given bad project data", () => {
   }).toThrow();
 });
 
-test.todo("produces interaction model from project data");
+// test("produces interaction model from project data", () => {
+//   const { languageModel } = lib.mapProjectDataToInteractionModel([]);
+//   expect(languageModel.hasOwnProperty("intents")).toBeTruthy();
+// });
 
 test("creates directory named from provided command line flag", () => {
   execSync("npm start model");

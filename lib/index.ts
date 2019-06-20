@@ -1,5 +1,5 @@
+// import { invertUtterances, createIntentMap } from "@botmock-api/utils";
 import fetch from "node-fetch";
-// import { createIntentMap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
@@ -9,10 +9,10 @@ type DialogIntent = {
   samples: string[];
   slots?: {
     name: string;
-    type: string;
-    elicitationRequired: boolean;
-    confirmationRequired: boolean;
-    prompts: { elicitation: string };
+    type?: string;
+    elicitationRequired?: boolean;
+    confirmationRequired?: boolean;
+    prompts?: { elicitation: string };
     samples?: string[];
   }[];
 };
@@ -64,18 +64,29 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
-  const [intents, , , project] = data;
+  const [intents, entities, , project] = data;
   return {
     languageModel: {
       invocationName: project.name,
+      // join the default amazon intents with the project intents
       intents: DEFAULT_INTENTS.concat(
         intents.map(intent => ({
           name: intent.name,
           samples: intent.utterances.map(utterance => utterance.text),
-          // slots become a map of the utterances that have variables defined
+          // define slots as a map of each unique variable appearing in the
+          // utterances for this intent
           slots: intent.utterances
             .filter(utterance => utterance.variables.length > 0)
-            .reduce((acc, utterance) => acc, []),
+            .reduce((acc, utterance) => {
+              return [
+                ...acc,
+                ...utterance.variables.reduce((acc_, variable) => {
+                  // const { name: type = "" } =
+                  //   entities.find(entity => entity.id === variable.entity) || {};
+                  return acc_;
+                }, {}),
+              ];
+            }, []),
         }))
       ),
       types: [],
