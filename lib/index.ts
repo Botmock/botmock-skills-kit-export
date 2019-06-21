@@ -4,7 +4,7 @@ import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
 type DialogIntent = {
-  configurationRequired?: boolean;
+  confirmationRequired?: boolean;
   name: string;
   samples: string[];
   slots?: {
@@ -26,6 +26,7 @@ type InteractionModel = {
     types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
   };
   dialog?: {
+    delegationStrategy?: string;
     intents: DialogIntent[];
   };
   prompts?: Prompt[];
@@ -64,15 +65,16 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
+  const VARIABLE_SIGN = "%";
   const [intents, entities, messages, project] = data;
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
-  // console.log(createIntentMap(messages, intents));
   return {
     dialog: {
-      intents: [],
+      delegationStrategy: "ALWAYS",
+      intents: intents.map(intent => ({ name: intent.name })),
     },
     prompts: [],
     languageModel: {
@@ -81,7 +83,25 @@ export function mapProjectDataToInteractionModel(
       intents: DEFAULT_INTENTS.concat(
         intents.map(intent => ({
           name: intent.name,
-          samples: intent.utterances.map(utterance => utterance.text),
+          samples: intent.utterances.map(utterance => {
+            let text = utterance.text;
+            let numVariableSignsEncountered = 0;
+            for (const { char, i } of text
+              .split("")
+              .map((c, i) => ({ char: c, i }))) {
+              // if this character of the utterance is the reserverd variable
+              // sign, replace it with the correct alexa skills kit equivalent
+              if (char === VARIABLE_SIGN) {
+                numVariableSignsEncountered += 1;
+                if (numVariableSignsEncountered % 2 !== 0) {
+                  text = text.substr(0, i) + "{" + text.substr(i + 1);
+                } else {
+                  text = text.substr(0, i) + "}" + text.substr(i + 1);
+                }
+              }
+            }
+            return text;
+          }),
           // define slots as a map of each unique variable appearing in the
           // utterances for this intent
           slots: intent.utterances
