@@ -71,6 +71,10 @@ export function mapProjectDataToInteractionModel(
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
+  // alexa skills kit only supports unicode spaces, periods, underscores,
+  // possessive apostrophes and hyphens
+  const stripUnallowedCharactersFromString = (str: string): string =>
+    str.replace(/!|,|_/g, "");
   // replace botmock variable signs with alexa skills kit braces
   const formatUtteranceText = (text_: string): string => {
     const VARIABLE_SIGN = "%";
@@ -106,17 +110,16 @@ export function mapProjectDataToInteractionModel(
     //   }
     // ),
     languageModel: {
-      invocationName: project.name,
+      invocationName: stripUnallowedCharactersFromString(project.name),
       // join the default amazon intents with the mapped project intents
       intents: DEFAULT_INTENTS.concat(
         intents.map(intent => ({
           name: intent.name,
-          samples: intent.utterances.map(utterance => {
-            const formattedText = formatUtteranceText(utterance.text);
-            // alexa skills kit only supports unicode spaces, periods, underscores,
-            // possessive apostrophes and hyphens
-            return formattedText.replace(/!|,/g, "");
-          }),
+          samples: intent.utterances.map(utterance =>
+            stripUnallowedCharactersFromString(
+              formatUtteranceText(utterance.text)
+            )
+          ),
           // define slots as a map of each unique variable appearing in the
           // utterances for this intent
           slots: intent.utterances
