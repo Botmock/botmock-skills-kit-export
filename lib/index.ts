@@ -1,4 +1,4 @@
-// import { createIntentMap } from "@botmock-api/utils";
+import { createIntentMap } from "@botmock-api/utils";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
@@ -52,7 +52,7 @@ export async function getProjectData(projectVariables: ProjectVariables) {
           Authorization: `Bearer ${token}`,
         },
       })).json();
-      return res.hasOwnProperty("board") ? res.board : res;
+      return res.hasOwnProperty("board") ? res.board.messages : res;
     })
   );
   return {
@@ -64,15 +64,17 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
-  const [intents, entities, , project] = data;
+  const [intents, entities, messages, project] = data;
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
+  // console.log(createIntentMap(messages, intents));
   return {
     dialog: {
       intents: [],
     },
+    prompts: [],
     languageModel: {
       invocationName: project.name,
       // join the default amazon intents with the project intents
