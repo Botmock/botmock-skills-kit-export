@@ -44,7 +44,7 @@ path to the desired output directory after the `start` command:
 npm start model
 ```
 
-### Uploading the generated model in the Alexa developer console
+### uploading the generated model in the Alexa developer console
 
 Go to [your Alexa skills kit dashboard](https://developer.amazon.com/alexa/console/ask).
 
