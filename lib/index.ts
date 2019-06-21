@@ -39,9 +39,8 @@ interface ProjectVariables {
   token: string;
 }
 
-const BOTMOCK_API_URL = "https://app.botmock.com/api";
-
 export async function getProjectData(projectVariables: ProjectVariables) {
+  const BOTMOCK_API_URL = "https://app.botmock.com/api";
   const { projectId, boardId, teamId, token } = projectVariables;
   const baseUrl = `${BOTMOCK_API_URL}/teams/${teamId}/projects/${projectId}`;
   // collect project data from endpoints
@@ -65,12 +64,30 @@ export async function getProjectData(projectVariables: ProjectVariables) {
 export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
-  const VARIABLE_SIGN = "%";
   const [intents, entities, messages, project] = data;
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
+  // replace botmock variable signs with alexa skills kit braces
+  const formatUtteranceText = (text_: string): string => {
+    const VARIABLE_SIGN = "%";
+    let text = text_;
+    let numVariableSignsEncountered = 0;
+    for (const { char, i } of text.split("").map((c, i) => ({ char: c, i }))) {
+      // if this character of the utterance is the reserved variable
+      // sign, replace it with the correct alexa skills kit equivalent
+      if (char === VARIABLE_SIGN) {
+        numVariableSignsEncountered += 1;
+        if (numVariableSignsEncountered % 2 !== 0) {
+          text = text.substr(0, i) + "{" + text.substr(i + 1);
+        } else {
+          text = text.substr(0, i) + "}" + text.substr(i + 1);
+        }
+      }
+    }
+    return text;
+  };
   return {
     dialog: {
       delegationStrategy: "ALWAYS",
@@ -84,23 +101,10 @@ export function mapProjectDataToInteractionModel(
         intents.map(intent => ({
           name: intent.name,
           samples: intent.utterances.map(utterance => {
-            let text = utterance.text;
-            let numVariableSignsEncountered = 0;
-            for (const { char, i } of text
-              .split("")
-              .map((c, i) => ({ char: c, i }))) {
-              // if this character of the utterance is the reserved variable
-              // sign, replace it with the correct alexa skills kit equivalent
-              if (char === VARIABLE_SIGN) {
-                numVariableSignsEncountered += 1;
-                if (numVariableSignsEncountered % 2 !== 0) {
-                  text = text.substr(0, i) + "{" + text.substr(i + 1);
-                } else {
-                  text = text.substr(0, i) + "}" + text.substr(i + 1);
-                }
-              }
-            }
-            return text;
+            const formattedText = formatUtteranceText(utterance.text);
+            // alexa skills kit only supports unicode spaces, periods, underscores,
+            // possessive apostrophes and hyphens
+            return formattedText.replace(/!/g, "");
           }),
           // define slots as a map of each unique variable appearing in the
           // utterances for this intent
@@ -109,13 +113,34 @@ export function mapProjectDataToInteractionModel(
             .reduce((acc, utterance) => {
               return [
                 ...acc,
-                // ...utterance.variables.reduce((acc_, variable) => {
-                //   // const { name: type = "" } =
-                //   //   entities.find(entity => entity.id === variable.entity) || {};
-                //   return acc_;
-                // }, {}),
+                utterance.variables.reduce((acc_, variable) => {
+                  return {
+                    ...acc_,
+                    // reduce on dynamic key names for sake of uniqueness
+                    [variable.name.replace(/%/g, "")]: {
+                      type: variable.type,
+                      samples: intent.utterances
+                        .filter(
+                          utterance =>
+                            utterance.variables.length > 0 &&
+                            utterance.variables.some(
+                              ({ name }) => variable.name
+                            )
+                        )
+                        .map(utterance => formatUtteranceText(utterance.text)),
+                    },
+                  };
+                }, {}),
               ];
-            }, []),
+            }, [])
+            .map(variable => {
+              const [name] = Object.keys(variable);
+              return {
+                name,
+                type: variable[name].type,
+                samples: variable[name].samples,
+              };
+            }),
         }))
       ),
       types,
