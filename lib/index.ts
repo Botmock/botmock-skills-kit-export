@@ -43,6 +43,7 @@ type DialogIntent = {
     elicitationRequired?: boolean;
     confirmationRequired?: boolean;
     prompts?: { elicitation: string };
+    validations?: { type: string; prompt: string; values?: string[] }[];
     samples?: string[];
   }[];
 };
@@ -92,14 +93,18 @@ export function mapProjectDataToInteractionModel(
   return {
     dialog: {
       delegationStrategy: "ALWAYS",
-      intents: intents.map(intent => ({ name: intent.name })),
+      intents: intents.map(intent => ({
+        name: intent.name,
+        confirmationRequired: false,
+        prompts: {},
+        slots: [],
+      })),
     },
-    prompts: Array.from(createIntentMap(messages, intents)).map(
-      ([messageId, intentIds]) => {
-        // console.log(messageId);
-        return { id: "", variations: [] };
-      }
-    ),
+    // prompts: Array.from(createIntentMap(messages, intents)).map(
+    //   ([messageId, intentIds]) => {
+    //     return { id: messageId, variations: intentIds };
+    //   }
+    // ),
     languageModel: {
       invocationName: project.name,
       // join the default amazon intents with the mapped project intents
