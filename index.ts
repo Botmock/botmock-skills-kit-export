@@ -1,6 +1,6 @@
+import "dotenv/config";
 import fs from "fs";
 import { basename, join } from "path";
-import { config } from "dotenv";
 // import {
 //   ErrorHandler,
 //   HandlerInput,
@@ -9,8 +9,6 @@ import { config } from "dotenv";
 // } from "ask-sdk-core";
 // import { Response, SessionEndedRequest } from "ask-sdk-model";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
-
-config();
 
 export type ProjectResponse = {
   errors?: { error: string }[];
