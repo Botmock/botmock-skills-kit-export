@@ -1,4 +1,4 @@
-// import { invertUtterances, createIntentMap } from "@botmock-api/utils";
+// import { createIntentMap } from "@botmock-api/utils";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
@@ -65,7 +65,14 @@ export function mapProjectDataToInteractionModel(
   data: any[]
 ): InteractionModel {
   const [intents, entities, , project] = data;
+  const types = entities.map(entity => ({
+    name: entity.name,
+    values: entity.data.map(({ value }) => ({ name: { value } })),
+  }));
   return {
+    dialog: {
+      intents: [],
+    },
     languageModel: {
       invocationName: project.name,
       // join the default amazon intents with the project intents
@@ -80,16 +87,16 @@ export function mapProjectDataToInteractionModel(
             .reduce((acc, utterance) => {
               return [
                 ...acc,
-                ...utterance.variables.reduce((acc_, variable) => {
-                  // const { name: type = "" } =
-                  //   entities.find(entity => entity.id === variable.entity) || {};
-                  return acc_;
-                }, {}),
+                // ...utterance.variables.reduce((acc_, variable) => {
+                //   // const { name: type = "" } =
+                //   //   entities.find(entity => entity.id === variable.entity) || {};
+                //   return acc_;
+                // }, {}),
               ];
             }, []),
         }))
       ),
-      types: [],
+      types,
     },
   };
 }
