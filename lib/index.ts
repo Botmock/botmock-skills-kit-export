@@ -36,6 +36,7 @@ type DialogIntent = {
   confirmationRequired?: boolean;
   name: string;
   samples: string[];
+  prompts?: {};
   slots?: {
     name: string;
     type?: string;
@@ -133,6 +134,7 @@ export function mapProjectDataToInteractionModel(
                 }, {}),
               ];
             }, [])
+            // map the variables back to the correct format
             .map(variable => {
               const [name] = Object.keys(variable);
               return {
