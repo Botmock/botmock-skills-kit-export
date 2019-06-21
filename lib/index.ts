@@ -79,7 +79,7 @@ export function mapProjectDataToInteractionModel(
     prompts: [],
     languageModel: {
       invocationName: project.name,
-      // join the default amazon intents with the project intents
+      // join the default amazon intents with the mapped project intents
       intents: DEFAULT_INTENTS.concat(
         intents.map(intent => ({
           name: intent.name,
@@ -89,7 +89,7 @@ export function mapProjectDataToInteractionModel(
             for (const { char, i } of text
               .split("")
               .map((c, i) => ({ char: c, i }))) {
-              // if this character of the utterance is the reserverd variable
+              // if this character of the utterance is the reserved variable
               // sign, replace it with the correct alexa skills kit equivalent
               if (char === VARIABLE_SIGN) {
                 numVariableSignsEncountered += 1;
