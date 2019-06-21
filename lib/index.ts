@@ -94,7 +94,12 @@ export function mapProjectDataToInteractionModel(
       delegationStrategy: "ALWAYS",
       intents: intents.map(intent => ({ name: intent.name })),
     },
-    prompts: [],
+    prompts: Array.from(createIntentMap(messages, intents)).map(
+      ([messageId, intentIds]) => {
+        // console.log(messageId);
+        return { id: "", variations: [] };
+      }
+    ),
     languageModel: {
       invocationName: project.name,
       // join the default amazon intents with the mapped project intents
@@ -134,7 +139,7 @@ export function mapProjectDataToInteractionModel(
                 }, {}),
               ];
             }, [])
-            // map the variables back to the correct format
+            // map the unique variables back to the correct format
             .map(variable => {
               const [name] = Object.keys(variable);
               return {
