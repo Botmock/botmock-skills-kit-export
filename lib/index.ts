@@ -3,35 +3,6 @@ import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
-type DialogIntent = {
-  confirmationRequired?: boolean;
-  name: string;
-  samples: string[];
-  slots?: {
-    name: string;
-    type?: string;
-    elicitationRequired?: boolean;
-    confirmationRequired?: boolean;
-    prompts?: { elicitation: string };
-    samples?: string[];
-  }[];
-};
-
-type Prompt = { id: string; variations: { type: string; value: string }[] };
-
-type InteractionModel = {
-  languageModel: {
-    invocationName: string;
-    intents?: Partial<DialogIntent>[];
-    types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
-  };
-  dialog?: {
-    delegationStrategy?: string;
-    intents: DialogIntent[];
-  };
-  prompts?: Prompt[];
-};
-
 interface ProjectVariables {
   projectId?: string;
   boardId?: string;
@@ -60,6 +31,35 @@ export async function getProjectData(projectVariables: ProjectVariables) {
     errors: data.filter(d => d.hasOwnProperty("error")),
   };
 }
+
+type DialogIntent = {
+  confirmationRequired?: boolean;
+  name: string;
+  samples: string[];
+  slots?: {
+    name: string;
+    type?: string;
+    elicitationRequired?: boolean;
+    confirmationRequired?: boolean;
+    prompts?: { elicitation: string };
+    samples?: string[];
+  }[];
+};
+
+type Prompt = { id: string; variations: { type: string; value: string }[] };
+
+type InteractionModel = {
+  languageModel: {
+    invocationName: string;
+    intents?: Partial<DialogIntent>[];
+    types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
+  };
+  dialog?: {
+    delegationStrategy?: string;
+    intents: DialogIntent[];
+  };
+  prompts?: Prompt[];
+};
 
 export function mapProjectDataToInteractionModel(
   data: any[]
@@ -104,7 +104,7 @@ export function mapProjectDataToInteractionModel(
             const formattedText = formatUtteranceText(utterance.text);
             // alexa skills kit only supports unicode spaces, periods, underscores,
             // possessive apostrophes and hyphens
-            return formattedText.replace(/!/g, "");
+            return formattedText.replace(/!|,/g, "");
           }),
           // define slots as a map of each unique variable appearing in the
           // utterances for this intent
