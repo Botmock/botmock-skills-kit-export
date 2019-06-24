@@ -10,9 +10,13 @@ interface ProjectVariables {
   token: string;
 }
 
-export async function getProjectData(projectVariables: ProjectVariables) {
+export async function getProjectData({
+  projectId,
+  boardId,
+  teamId,
+  token,
+}: ProjectVariables) {
   const BOTMOCK_API_URL = "https://app.botmock.com/api";
-  const { projectId, boardId, teamId, token } = projectVariables;
   const baseUrl = `${BOTMOCK_API_URL}/teams/${teamId}/projects/${projectId}`;
   // collect project data from endpoints
   const data = await Promise.all(
@@ -132,7 +136,9 @@ export function mapProjectDataToInteractionModel(
                     ...acc_,
                     // reduce on dynamic key names for sake of uniqueness
                     [variable.name.replace(/%/g, "")]: {
-                      type: variable.type,
+                      type: entities.find(
+                        entity => entity.id === variable.entity
+                      ).name,
                       samples: intent.utterances
                         .filter(
                           utterance =>

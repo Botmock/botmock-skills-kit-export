@@ -35,9 +35,12 @@ try {
     }
     const interactionModel = mapProjectDataToInteractionModel(project.data);
     const data = JSON.stringify({ interactionModel });
-    await fs.promises.writeFile(`${outputPath}/en-US.json`, data);
+    const filePath = `${outputPath}/en-US.json`;
+    await fs.promises.writeFile(filePath, data);
+    const { size } = await fs.promises.stat(filePath);
     console.log(
-      `Completed writing interaction model to /${basename(outputPath)}`
+      `Completed writing interaction model to /${basename(outputPath)} (${size /
+        1000}kB)`
     );
   })();
 } catch (err) {
