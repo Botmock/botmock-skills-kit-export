@@ -1,4 +1,3 @@
-import { createIntentMap } from "@botmock-api/utils";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
@@ -36,20 +35,24 @@ export async function getProjectData({
   };
 }
 
+type Slot = {
+  name: string;
+  type?: string;
+  elicitationRequired?: boolean;
+  confirmationRequired?: boolean;
+  prompts?: { elicitation: string };
+  validations?: { type: string; prompt: string; values?: string[] }[];
+  samples?: string[];
+};
+
+type Slots = Slot[];
+
 type DialogIntent = {
   confirmationRequired?: boolean;
   name: string;
   samples: string[];
   prompts?: {};
-  slots?: {
-    name: string;
-    type?: string;
-    elicitationRequired?: boolean;
-    confirmationRequired?: boolean;
-    prompts?: { elicitation: string };
-    validations?: { type: string; prompt: string; values?: string[] }[];
-    samples?: string[];
-  }[];
+  slots?: Slots;
 };
 
 type Prompt = { id: string; variations: { type: string; value: string }[] };
@@ -75,6 +78,47 @@ export function mapProjectDataToInteractionModel(
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
+  // define slots as a map of each unique variable appearing in the
+  // utterances for this intent
+  const getSlotsForIntent = (intent: {
+    utterances?: { text: string; variables: any[] }[];
+  }): Slots => {
+    return (
+      intent.utterances
+        .filter(utterance => utterance.variables.length > 0)
+        .reduce((acc, utterance) => {
+          return [
+            ...acc,
+            utterance.variables.reduce((acc_, variable) => {
+              return {
+                ...acc_,
+                // reduce on dynamic key names for sake of uniqueness
+                [variable.name.replace(/%/g, "")]: {
+                  type: entities.find(entity => entity.id === variable.entity)
+                    .name,
+                  samples: intent.utterances
+                    .filter(
+                      utterance =>
+                        utterance.variables.length > 0 &&
+                        utterance.variables.some(({ name }) => variable.name)
+                    )
+                    .map(utterance => formatUtteranceText(utterance.text)),
+                },
+              };
+            }, {}),
+          ];
+        }, [])
+        // map the unique variables back to the correct format
+        .map(variable => {
+          const [name] = Object.keys(variable);
+          return {
+            name,
+            type: variable[name].type,
+            samples: variable[name].samples,
+          };
+        })
+    );
+  };
   // alexa skills kit only supports unicode spaces, periods, underscores,
   // possessive apostrophes and hyphens
   const stripUnallowedCharactersFromString = (str: string): string =>
@@ -105,7 +149,14 @@ export function mapProjectDataToInteractionModel(
         name: intent.name,
         confirmationRequired: false,
         prompts: {},
-        slots: [],
+        slots: getSlotsForIntent(intent).map(slot => ({
+          name: slot.name,
+          type: slot.type,
+          confirmationRequired: false,
+          // elicitationRequired: true,
+          prompts: {},
+          validations: [],
+        })),
       })),
     },
     // prompts: Array.from(createIntentMap(messages, intents)).map(
@@ -124,44 +175,7 @@ export function mapProjectDataToInteractionModel(
               formatUtteranceText(utterance.text)
             )
           ),
-          // define slots as a map of each unique variable appearing in the
-          // utterances for this intent
-          slots: intent.utterances
-            .filter(utterance => utterance.variables.length > 0)
-            .reduce((acc, utterance) => {
-              return [
-                ...acc,
-                utterance.variables.reduce((acc_, variable) => {
-                  return {
-                    ...acc_,
-                    // reduce on dynamic key names for sake of uniqueness
-                    [variable.name.replace(/%/g, "")]: {
-                      type: entities.find(
-                        entity => entity.id === variable.entity
-                      ).name,
-                      samples: intent.utterances
-                        .filter(
-                          utterance =>
-                            utterance.variables.length > 0 &&
-                            utterance.variables.some(
-                              ({ name }) => variable.name
-                            )
-                        )
-                        .map(utterance => formatUtteranceText(utterance.text)),
-                    },
-                  };
-                }, {}),
-              ];
-            }, [])
-            // map the unique variables back to the correct format
-            .map(variable => {
-              const [name] = Object.keys(variable);
-              return {
-                name,
-                type: variable[name].type,
-                samples: variable[name].samples,
-              };
-            }),
+          slots: getSlotsForIntent(intent),
         }))
       ),
       types,
