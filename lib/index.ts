@@ -145,25 +145,25 @@ export function mapProjectDataToInteractionModel(
   return {
     dialog: {
       delegationStrategy: "ALWAYS",
-      intents: intents.map(intent => ({
-        name: intent.name,
-        confirmationRequired: false,
-        prompts: {},
-        slots: getSlotsForIntent(intent).map(slot => ({
-          name: slot.name,
-          type: slot.type,
-          confirmationRequired: false,
-          // elicitationRequired: true,
+      intents: intents
+        .filter(intent =>
+          intent.utterances.some(utterance => utterance.variables.length > 0)
+        )
+        .map(intent => ({
+          name: intent.name,
           prompts: {},
-          validations: [],
+          confirmationRequired: false,
+          slots: getSlotsForIntent(intent).map(slot => ({
+            name: slot.name,
+            type: slot.type,
+            confirmationRequired: false,
+            // elicitationRequired: true,
+            prompts: {},
+            validations: [],
+          })),
         })),
-      })),
     },
-    // prompts: Array.from(createIntentMap(messages, intents)).map(
-    //   ([messageId, intentIds]) => {
-    //     return { id: messageId, variations: intentIds };
-    //   }
-    // ),
+    prompts: [],
     languageModel: {
       invocationName: stripUnallowedCharactersFromString(project.name),
       // join the default amazon intents with the mapped project intents
