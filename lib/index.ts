@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { createIntentMap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
@@ -142,28 +143,8 @@ export function mapProjectDataToInteractionModel(
     }
     return text;
   };
+  // const prompts = Array.from(createIntentMap());
   return {
-    dialog: {
-      delegationStrategy: "ALWAYS",
-      intents: intents
-        .filter(intent =>
-          intent.utterances.some(utterance => utterance.variables.length > 0)
-        )
-        .map(intent => ({
-          name: intent.name,
-          prompts: {},
-          confirmationRequired: false,
-          slots: getSlotsForIntent(intent).map(slot => ({
-            name: slot.name,
-            type: slot.type,
-            confirmationRequired: false,
-            // elicitationRequired: true,
-            prompts: {},
-            validations: [],
-          })),
-        })),
-    },
-    prompts: [],
     languageModel: {
       invocationName: stripUnallowedCharactersFromString(project.name),
       // join the default amazon intents with the mapped project intents
@@ -180,5 +161,28 @@ export function mapProjectDataToInteractionModel(
       ),
       types,
     },
+    dialog: {
+      intents: intents
+        .filter(intent =>
+          intent.utterances.some(utterance => utterance.variables.length > 0)
+        )
+        .map(intent => ({
+          name: intent.name,
+          confirmationRequired: false,
+          prompts: {},
+          slots: getSlotsForIntent(intent).map(slot => ({
+            name: slot.name,
+            type: slot.type,
+            confirmationRequired: false,
+            elicitationRequired: true,
+            prompts: {
+              elicitation: `Elicit.Intent-${slot.name}.IntentSlot-${slot.name}`,
+            },
+            // validations: [],
+          })),
+        })),
+      delegationStrategy: "ALWAYS",
+    },
+    prompts: [],
   };
 }
