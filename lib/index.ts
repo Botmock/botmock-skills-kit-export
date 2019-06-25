@@ -1,5 +1,5 @@
+// import { createIntentMap } from "@botmock-api/utils";
 import fetch from "node-fetch";
-import { createIntentMap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 
@@ -71,8 +71,10 @@ type InteractionModel = {
   prompts?: Prompt[];
 };
 
+type ProjectPayload = any[];
+
 export function mapProjectDataToInteractionModel(
-  data: any[]
+  data: ProjectPayload
 ): InteractionModel {
   const [intents, entities, messages, project] = data;
   const types = entities.map(entity => ({
@@ -95,6 +97,7 @@ export function mapProjectDataToInteractionModel(
                 ...acc_,
                 // reduce on dynamic key names for sake of uniqueness
                 [variable.name.replace(/%/g, "")]: {
+                  // intent,
                   type: entities.find(entity => entity.id === variable.entity)
                     .name,
                   samples: intent.utterances
@@ -143,7 +146,20 @@ export function mapProjectDataToInteractionModel(
     }
     return text;
   };
-  // const prompts = Array.from(createIntentMap());
+  // prompts are a mapping of the intent-slot variations + any validations
+  const prompts = intents
+    .map(getSlotsForIntent)
+    .filter(data => data.length && data.samples)
+    .map((data: { name: string; type: string; samples: string[] }) => {
+      const intent = "";
+      return {
+        id: `Elicit.Intent-${intent}.IntentSlot-${data.name}`,
+        variations: data.samples.map(sample => ({
+          type: "PlainText",
+          value: sample,
+        })),
+      };
+    });
   return {
     languageModel: {
       invocationName: stripUnallowedCharactersFromString(project.name),
@@ -183,6 +199,6 @@ export function mapProjectDataToInteractionModel(
         })),
       delegationStrategy: "ALWAYS",
     },
-    prompts: [],
+    prompts,
   };
 }
