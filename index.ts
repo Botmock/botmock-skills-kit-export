@@ -1,13 +1,6 @@
 import "dotenv/config";
 import fs from "fs";
 import { basename, join } from "path";
-// import {
-//   ErrorHandler,
-//   HandlerInput,
-//   RequestHandler,
-//   SkillBuilders,
-// } from "ask-sdk-core";
-// import { Response, SessionEndedRequest } from "ask-sdk-model";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
 
 export type ProjectResponse = {
