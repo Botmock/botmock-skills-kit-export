@@ -1,4 +1,4 @@
-// import { createIntentMap } from "@botmock-api/utils";
+// import { topoSort } from "@botmock-api/utils";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
@@ -76,7 +76,8 @@ type ProjectPayload = any[];
 export function mapProjectDataToInteractionModel(
   data: ProjectPayload
 ): InteractionModel {
-  const [intents, entities, messages, project] = data;
+  let [intents, entities, messages, project] = data;
+  // messages = topoSort(messages)
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
@@ -149,12 +150,18 @@ export function mapProjectDataToInteractionModel(
   // prompts are a mapping of the intent-slot variations + any validations
   const prompts = intents
     .map(getSlotsForIntent)
-    .filter(data => data.length && data.samples)
-    .map((data: { name: string; type: string; samples: string[] }) => {
-      const intent = "";
+    .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
+    .map((slot: Slot) => {
+      const { name } = intents.find(intent =>
+        intent.utterances
+          .filter(utterance => utterance.variables.length > 0)
+          .filter(utterance =>
+            utterance.variables.some(variable => variable.name === slot.name)
+          )
+      );
       return {
-        id: `Elicit.Intent-${intent}.IntentSlot-${data.name}`,
-        variations: data.samples.map(sample => ({
+        id: `Elicit.Intent-${name}.IntentSlot-${slot.name}`,
+        variations: (slot.samples || []).map(sample => ({
           type: "PlainText",
           value: sample,
         })),
