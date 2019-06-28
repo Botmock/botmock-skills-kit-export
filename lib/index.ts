@@ -1,4 +1,5 @@
-// import { topoSort } from "@botmock-api/utils";
+import { topoSort } from "@botmock-api/utils";
+import uuid from "uuid/v4";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
@@ -27,7 +28,7 @@ export async function getProjectData({
           Authorization: `Bearer ${token}`,
         },
       })).json();
-      return res.hasOwnProperty("board") ? res.board.messages : res;
+      return res.hasOwnProperty("board") ? topoSort(res.board.messages) : res;
     })
   );
   return {
@@ -37,6 +38,7 @@ export async function getProjectData({
 }
 
 type Slot = {
+  _id?: string;
   name: string;
   type?: string;
   elicitationRequired?: boolean;
@@ -76,8 +78,7 @@ type ProjectPayload = any[];
 export function mapProjectDataToInteractionModel(
   data: ProjectPayload
 ): InteractionModel {
-  let [intents, entities, messages, project] = data;
-  // messages = topoSort(messages)
+  const [intents, entities, , project] = data;
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
@@ -117,6 +118,7 @@ export function mapProjectDataToInteractionModel(
         .map(variable => {
           const [name] = Object.keys(variable);
           return {
+            _id: uuid(),
             name,
             type: variable[name].type,
             samples: variable[name].samples,
@@ -151,7 +153,8 @@ export function mapProjectDataToInteractionModel(
   const prompts = intents
     .map(getSlotsForIntent)
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
-    .map((slot: Slot) => {
+    .map((slotsWithSamples: Slot[]) => {
+      const [slot] = slotsWithSamples;
       const { name } = intents.find(intent =>
         intent.utterances
           .filter(utterance => utterance.variables.length > 0)
@@ -161,7 +164,7 @@ export function mapProjectDataToInteractionModel(
       );
       return {
         id: `Elicit.Intent-${name}.IntentSlot-${slot.name}`,
-        variations: (slot.samples || []).map(sample => ({
+        variations: slot.samples.map(sample => ({
           type: "PlainText",
           value: sample,
         })),
@@ -185,12 +188,14 @@ export function mapProjectDataToInteractionModel(
       types,
     },
     dialog: {
+      delegationStrategy: "SKILL_RESPONSE",
       intents: intents
         .filter(intent =>
           intent.utterances.some(utterance => utterance.variables.length > 0)
         )
         .map(intent => ({
           name: intent.name,
+          delegationStrategy: "ALWAYS",
           confirmationRequired: false,
           prompts: {},
           slots: getSlotsForIntent(intent).map(slot => ({
@@ -198,13 +203,9 @@ export function mapProjectDataToInteractionModel(
             type: slot.type,
             confirmationRequired: false,
             elicitationRequired: true,
-            prompts: {
-              elicitation: `Elicit.Intent-${slot.name}.IntentSlot-${slot.name}`,
-            },
-            // validations: [],
+            prompts: {},
           })),
         })),
-      delegationStrategy: "ALWAYS",
     },
     prompts,
   };
