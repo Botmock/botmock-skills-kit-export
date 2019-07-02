@@ -1,4 +1,3 @@
-import { topoSort } from "@botmock-api/utils";
 import uuid from "uuid/v4";
 import fetch from "node-fetch";
 import { ProjectResponse } from "../";
@@ -28,7 +27,7 @@ export async function getProjectData({
           Authorization: `Bearer ${token}`,
         },
       })).json();
-      return res.hasOwnProperty("board") ? topoSort(res.board.messages) : res;
+      return res.hasOwnProperty("board") ? res.board.messages : res;
     })
   );
   return {
@@ -38,7 +37,6 @@ export async function getProjectData({
 }
 
 type Slot = {
-  _id?: string;
   name: string;
   type?: string;
   elicitationRequired?: boolean;
@@ -51,9 +49,11 @@ type Slot = {
 type Slots = Slot[];
 
 type DialogIntent = {
-  confirmationRequired?: boolean;
   name: string;
   samples: string[];
+  delegationStrategy?: string;
+  elicitationRequired?: boolean;
+  confirmationRequired?: boolean;
   prompts?: {};
   slots?: Slots;
 };
@@ -118,7 +118,6 @@ export function mapProjectDataToInteractionModel(
         .map(variable => {
           const [name] = Object.keys(variable);
           return {
-            _id: uuid(),
             name,
             type: variable[name].type,
             samples: variable[name].samples,
@@ -155,15 +154,8 @@ export function mapProjectDataToInteractionModel(
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
     .map((slotsWithSamples: Slot[]) => {
       const [slot] = slotsWithSamples;
-      const { name } = intents.find(intent =>
-        intent.utterances
-          .filter(utterance => utterance.variables.length > 0)
-          .filter(utterance =>
-            utterance.variables.some(variable => variable.name === slot.name)
-          )
-      );
       return {
-        id: `Elicit.Intent-${name}.IntentSlot-${slot.name}`,
+        id: `Elicit.Slot.${uuid()}`,
         variations: slot.samples.map(sample => ({
           type: "PlainText",
           value: sample,
@@ -197,13 +189,28 @@ export function mapProjectDataToInteractionModel(
           name: intent.name,
           delegationStrategy: "ALWAYS",
           confirmationRequired: false,
+          elicitationRequired: true,
           prompts: {},
           slots: getSlotsForIntent(intent).map(slot => ({
             name: slot.name,
             type: slot.type,
             confirmationRequired: false,
             elicitationRequired: true,
-            prompts: {},
+            // reduce over the prompt that contains an utterance of this slot
+            prompts:
+              (
+                prompts.filter(prompt => {
+                  return prompt.variations
+                    .map(variation => variation.value)
+                    .some(
+                      variation =>
+                        typeof variation === "string" &&
+                        variation.includes(`{${slot.name}}`)
+                    );
+                }) || []
+              ).reduce((acc, prompt) => {
+                return { ...acc, elicitation: prompt.id };
+              }, {}) || {},
           })),
         })),
     },
