@@ -83,4 +83,4 @@ _NOTE: Make sure to leave any sensitive information out of an issue when reporti
 
 ## License
 
-Botmock Skills Kit is copyright © 2019 Botmock. It is free software, and may be redistributed under the terms specified in the LICENSE file.
+Botmock Skills Kit Export is copyright © 2019 Botmock. It is free software, and may be redistributed under the terms specified in the LICENSE file.
