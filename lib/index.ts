@@ -79,6 +79,7 @@ export function mapProjectDataToInteractionModel(
   data: ProjectPayload
 ): InteractionModel {
   const [intents, entities, , project] = data;
+  // define types as a map of entities
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
@@ -90,8 +91,8 @@ export function mapProjectDataToInteractionModel(
   }): Slots => {
     const uniqueSlots = intent.utterances
       .filter(utterance => utterance.variables.length > 0)
-      .reduce((acc, utterance) => {
-        return {
+      .reduce(
+        (acc, utterance) => ({
           ...acc,
           ...utterance.variables.reduce((acc_, variable) => {
             return {
@@ -110,8 +111,9 @@ export function mapProjectDataToInteractionModel(
               },
             };
           }, {}),
-        };
-      }, {});
+        }),
+        {}
+      );
     return (
       Object.keys(uniqueSlots)
         // map the unique variables back to the correct format
