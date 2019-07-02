@@ -88,39 +88,39 @@ export function mapProjectDataToInteractionModel(
   const getSlotsForIntent = (intent: {
     utterances?: { text: string; variables: any[] }[];
   }): Slots => {
+    const uniqueSlots = intent.utterances
+      .filter(utterance => utterance.variables.length > 0)
+      .reduce((acc, utterance) => {
+        return {
+          ...acc,
+          ...utterance.variables.reduce((acc_, variable) => {
+            return {
+              ...acc_,
+              // reduce on dynamic key names for sake of uniqueness
+              [variable.name.replace(/%/g, "")]: {
+                type: entities.find(entity => entity.id === variable.entity)
+                  .name,
+                samples: intent.utterances
+                  .filter(
+                    utterance =>
+                      utterance.variables.length > 0 &&
+                      utterance.variables.some(({ name }) => variable.name)
+                  )
+                  .map(utterance => formatUtteranceText(utterance.text)),
+              },
+            };
+          }, {}),
+        };
+      }, {});
     return (
-      intent.utterances
-        .filter(utterance => utterance.variables.length > 0)
-        .reduce((acc, utterance) => {
-          return [
-            ...acc,
-            utterance.variables.reduce((acc_, variable) => {
-              return {
-                ...acc_,
-                // reduce on dynamic key names for sake of uniqueness
-                [variable.name.replace(/%/g, "")]: {
-                  // intent,
-                  type: entities.find(entity => entity.id === variable.entity)
-                    .name,
-                  samples: intent.utterances
-                    .filter(
-                      utterance =>
-                        utterance.variables.length > 0 &&
-                        utterance.variables.some(({ name }) => variable.name)
-                    )
-                    .map(utterance => formatUtteranceText(utterance.text)),
-                },
-              };
-            }, {}),
-          ];
-        }, [])
+      Object.keys(uniqueSlots)
         // map the unique variables back to the correct format
-        .map(variable => {
-          const [name] = Object.keys(variable);
+        .map(name => {
+          const { type, samples } = uniqueSlots[name];
           return {
             name,
-            type: variable[name].type,
-            samples: variable[name].samples,
+            type,
+            samples,
           };
         })
     );
