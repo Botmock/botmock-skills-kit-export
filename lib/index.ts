@@ -133,13 +133,13 @@ export function mapProjectDataToInteractionModel(
     str.replace(/!|,|_/g, "");
   // replace botmock variable signs with alexa skills kit braces
   const formatUtteranceText = (text_: string): string => {
-    const VARIABLE_SIGN = "%";
+    const BOTMOCK_VARIABLE_SIGN = "%";
     let text = text_;
     let numVariableSignsEncountered = 0;
     for (const { char, i } of text.split("").map((c, i) => ({ char: c, i }))) {
       // if this character of the utterance is the reserved variable
       // sign, replace it with the correct alexa skills kit equivalent
-      if (char === VARIABLE_SIGN) {
+      if (char === BOTMOCK_VARIABLE_SIGN) {
         numVariableSignsEncountered += 1;
         if (numVariableSignsEncountered % 2 !== 0) {
           text = text.substr(0, i) + "{" + text.substr(i + 1);

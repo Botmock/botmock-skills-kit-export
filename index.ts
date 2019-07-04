@@ -8,6 +8,20 @@ export type ProjectResponse = {
   data: any[];
 };
 
+const MIN_NODE_VERSION = 101600;
+const numericalNodeVersion = parseInt(
+  process.version
+    .slice(1)
+    .split(".")
+    .map(seq => seq.padStart(2, "0"))
+    .join(""),
+  10
+);
+
+if (numericalNodeVersion < MIN_NODE_VERSION) {
+  throw new Error("this script requires node.js version 10.16.0 or greater");
+}
+
 try {
   (async () => {
     const project: ProjectResponse = await getProjectData({
