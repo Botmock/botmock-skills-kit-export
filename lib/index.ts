@@ -1,40 +1,7 @@
 import uuid from "uuid/v4";
-import fetch from "node-fetch";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
-
-interface ProjectVariables {
-  projectId?: string;
-  boardId?: string;
-  teamId?: string;
-  token: string;
-}
-
-export async function getProjectData({
-  projectId,
-  boardId,
-  teamId,
-  token,
-}: ProjectVariables) {
-  const BOTMOCK_API_URL = "https://app.botmock.com/api";
-  const baseUrl = `${BOTMOCK_API_URL}/teams/${teamId}/projects/${projectId}`;
-  // collect project data from endpoints
-  const data = await Promise.all(
-    ["intents", "entities", `boards/${boardId}`, ""].map(async path => {
-      const res = await (await fetch(`${baseUrl}/${path}`, {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })).json();
-      return res.hasOwnProperty("board") ? res.board.messages : res;
-    })
-  );
-  return {
-    data: data.filter(d => !d.hasOwnProperty("error")),
-    errors: data.filter(d => d.hasOwnProperty("error")),
-  };
-}
+export { default as getProjectData } from "./client";
 
 type Slot = {
   name: string;
