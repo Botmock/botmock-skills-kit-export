@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/botmock-skills-kit-export
     docker:
-      - image: circleci/node:10.15.3
+      - image: circleci/node:10.16.0
     steps:
       - checkout
       - run:
