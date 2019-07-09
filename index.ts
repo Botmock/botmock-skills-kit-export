@@ -38,9 +38,11 @@ try {
       await fs.promises.mkdir(outputPath);
     }
     const interactionModel = mapProjectDataToInteractionModel(project.data);
-    const data = JSON.stringify({ interactionModel });
     const filePath = `${outputPath}/en-US.json`;
-    await fs.promises.writeFile(filePath, data);
+    await fs.promises.writeFile(
+      filePath,
+      JSON.stringify({ interactionModel }, null, 2)
+    );
     const { size } = await fs.promises.stat(filePath);
     console.log(
       `Completed writing interaction model to /${basename(outputPath)} (${size /

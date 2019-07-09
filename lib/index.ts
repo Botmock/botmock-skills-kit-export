@@ -117,7 +117,6 @@ export function mapProjectDataToInteractionModel(
     }
     return text;
   };
-  // prompts are a mapping of the intent-slot variations + any validations
   const prompts = intents
     .map(getSlotsForIntent)
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
