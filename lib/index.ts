@@ -40,7 +40,11 @@ type InteractionModel = {
   prompts?: Prompt[];
 };
 
-type ProjectPayload = any[];
+type ProjectPayload = Readonly<any[]>;
+
+type Intent = Partial<{
+  utterances?: { text: string; variables: any[] }[];
+}>;
 
 export function mapProjectDataToInteractionModel(
   data: ProjectPayload
@@ -53,9 +57,7 @@ export function mapProjectDataToInteractionModel(
   }));
   // define slots as a map of each unique variable appearing in the
   // utterances for this intent
-  const getSlotsForIntent = (intent: {
-    utterances?: { text: string; variables: any[] }[];
-  }): Slots => {
+  const getSlotsForIntent = (intent: Intent): Slots => {
     const uniqueSlots = intent.utterances
       .filter(utterance => utterance.variables.length > 0)
       .reduce(
