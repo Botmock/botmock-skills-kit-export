@@ -29,7 +29,7 @@ export default async function getProjectData({
         },
       });
       if (!res.ok) {
-        return { error: `failed to fetch ${path}` };
+        throw new Error(`${res.status} response on Botmock API fetch request`);
       }
       const json = await res.json();
       return json.hasOwnProperty("board") ? json.board.messages : json;

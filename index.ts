@@ -30,9 +30,6 @@ try {
       teamId: process.env.BOTMOCK_TEAM_ID,
       token: process.env.BOTMOCK_TOKEN,
     });
-    for (const { error } of project.errors) {
-      throw new Error(error);
-    }
     const outputPath = join(__dirname, process.argv[2] || "output");
     // try to read from the output path; if possible, we do not need to create it
     try {
