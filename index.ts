@@ -1,4 +1,5 @@
 import "dotenv/config";
+// import { remove } from "fs-extra";
 import fs from "fs";
 import { sep, basename, join } from "path";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
@@ -22,6 +23,8 @@ if (numericalNodeVersion < MIN_NODE_VERSION) {
   throw new Error("this script requires node.js version 10.16.0 or greater");
 }
 
+export const outputPath = join(__dirname, process.argv[2] || "output");
+
 try {
   (async () => {
     const project: ProjectResponse = await getProjectData({
@@ -30,7 +33,6 @@ try {
       teamId: process.env.BOTMOCK_TEAM_ID,
       token: process.env.BOTMOCK_TOKEN,
     });
-    const outputPath = join(__dirname, process.argv[2] || "output");
     // try to read from the output path; if possible, we do not need to create it
     try {
       await fs.promises.access(outputPath, fs.constants.R_OK);

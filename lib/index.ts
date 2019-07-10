@@ -96,10 +96,13 @@ export function mapProjectDataToInteractionModel(
         })
     );
   };
-  // alexa skills kit only supports unicode spaces, periods, underscores,
-  // possessive apostrophes and hyphens
-  const stripUnallowedCharactersFromString = (str: string): string =>
-    str.replace(/!|,|_/g, "");
+  // correctly format a string to prevent build errors
+  const stripUnallowedCharactersFromString = (str: string): string => {
+    return str
+      .replace(/!|,|_|alexa/gi, "")
+      .toLowerCase()
+      .trim();
+  };
   // replace botmock variable signs with alexa skills kit braces
   const formatUtteranceText = (text_: string): string => {
     const BOTMOCK_VARIABLE_SIGN = "%";

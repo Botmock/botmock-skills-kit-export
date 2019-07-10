@@ -1,7 +1,17 @@
 import { execSync } from "child_process";
+// import { remove } from "fs-extra";
 import path from "path";
 import fs from "fs";
 import * as lib from "../lib";
+import { outputPath } from "../";
+
+// beforeEach(async () => {
+//   // cleanup the created output path if it exists
+//   try {
+//     await fs.promises.access(outputPath, fs.constants.R_OK);
+//     await remove(outputPath);
+//   } catch (_) {}
+// });
 
 test.todo("writes interaction model");
 test.todo("warns in the case of node.js version below minimum");
