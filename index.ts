@@ -1,6 +1,6 @@
 import "dotenv/config";
 import fs from "fs";
-import { basename, join } from "path";
+import { sep, basename, join } from "path";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
 
 export type ProjectResponse = {
@@ -38,15 +38,16 @@ try {
       await fs.promises.mkdir(outputPath);
     }
     const interactionModel = mapProjectDataToInteractionModel(project.data);
-    const filePath = `${outputPath}/en-US.json`;
+    const filePath = join(outputPath, "en-US.json");
     await fs.promises.writeFile(
       filePath,
       JSON.stringify({ interactionModel }, null, 2)
     );
     const { size } = await fs.promises.stat(filePath);
     console.log(
-      `Completed writing interaction model to /${basename(outputPath)} (${size /
-        1000}kB)`
+      `Completed writing interaction model to ${sep}${basename(
+        outputPath
+      )} (${size / 1000}kB)`
     );
   })();
 } catch (err) {
