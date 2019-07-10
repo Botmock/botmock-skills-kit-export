@@ -97,12 +97,11 @@ export function mapProjectDataToInteractionModel(
     );
   };
   // correctly format a string to prevent build errors
-  const stripUnallowedCharactersFromString = (str: string): string => {
-    return str
+  const stripUnallowedCharactersFromString = (str: string): string =>
+    str
       .replace(/!|,|_|alexa/gi, "")
       .toLowerCase()
       .trim();
-  };
   // replace botmock variable signs with alexa skills kit braces
   const formatUtteranceText = (text_: string): string => {
     const BOTMOCK_VARIABLE_SIGN = "%";
