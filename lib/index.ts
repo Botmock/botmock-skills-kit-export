@@ -1,4 +1,5 @@
 import uuid from "uuid/v4";
+import { symmetricWrap } from "@botmock-api/utils";
 import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 export { default as getProjectData } from "./client";
@@ -76,7 +77,9 @@ export function mapProjectDataToInteractionModel(
                       utterance.variables.length > 0 &&
                       utterance.variables.some(({ name }) => variable.name)
                   )
-                  .map(utterance => formatUtteranceText(utterance.text)),
+                  .map(utterance =>
+                    symmetricWrap(utterance.text, { l: "{", r: "}" })
+                  ),
               },
             };
           }, {}),
@@ -102,25 +105,6 @@ export function mapProjectDataToInteractionModel(
       .replace(/!|,|_|alexa/gi, "")
       .toLowerCase()
       .trim();
-  // replace botmock variable signs with alexa skills kit braces
-  const formatUtteranceText = (text_: string): string => {
-    const BOTMOCK_VARIABLE_SIGN = "%";
-    let text = text_;
-    let numVariableSignsEncountered = 0;
-    for (const { char, i } of text.split("").map((c, i) => ({ char: c, i }))) {
-      // if this character of the utterance is the reserved variable
-      // sign, replace it with the correct alexa skills kit equivalent
-      if (char === BOTMOCK_VARIABLE_SIGN) {
-        numVariableSignsEncountered += 1;
-        if (numVariableSignsEncountered % 2 !== 0) {
-          text = text.substr(0, i) + "{" + text.substr(i + 1);
-        } else {
-          text = text.substr(0, i) + "}" + text.substr(i + 1);
-        }
-      }
-    }
-    return text;
-  };
   const prompts = intents
     .map(getSlotsForIntent)
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
@@ -143,7 +127,7 @@ export function mapProjectDataToInteractionModel(
           name: intent.name,
           samples: intent.utterances.map(utterance =>
             stripUnallowedCharactersFromString(
-              formatUtteranceText(utterance.text)
+              symmetricWrap(utterance.text, { l: "{", r: "}" })
             )
           ),
           slots: getSlotsForIntent(intent),

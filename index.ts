@@ -1,5 +1,4 @@
 import "dotenv/config";
-// import { remove } from "fs-extra";
 import fs from "fs";
 import { sep, basename, join } from "path";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
