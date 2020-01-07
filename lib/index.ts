@@ -1,6 +1,5 @@
 import uuid from "uuid/v4";
 import { symmetricWrap } from "@botmock-api/utils";
-import { ProjectResponse } from "../";
 import { DEFAULT_INTENTS } from "../templates";
 export { default as getProjectData } from "./client";
 
@@ -9,8 +8,8 @@ type Slot = {
   type?: string;
   elicitationRequired?: boolean;
   confirmationRequired?: boolean;
-  prompts?: { elicitation: string };
-  validations?: { type: string; prompt: string; values?: string[] }[];
+  prompts?: { elicitation: string; };
+  validations?: { type: string; prompt: string; values?: string[]; }[];
   samples?: string[];
 };
 
@@ -26,13 +25,13 @@ type DialogIntent = {
   slots?: Slots;
 };
 
-type Prompt = { id: string; variations: { type: string; value: string }[] };
+type Prompt = { id: string; variations: { type: string; value: string; }[]; };
 
 type InteractionModel = {
   languageModel: {
     invocationName: string;
     intents?: Partial<DialogIntent>[];
-    types?: { values: { name: { value: string; synonyms: string[] } }[] }[];
+    types?: { values: { name: { value: string; synonyms: string[]; }; }[]; }[];
   };
   dialog?: {
     delegationStrategy?: string;
@@ -44,7 +43,7 @@ type InteractionModel = {
 type ProjectPayload = Readonly<any[]>;
 
 type Intent = Partial<{
-  utterances?: { text: string; variables: any[] }[];
+  utterances?: { text: string; variables: any[]; }[];
 }>;
 
 export function mapProjectDataToInteractionModel(
@@ -65,21 +64,22 @@ export function mapProjectDataToInteractionModel(
         (acc, utterance) => ({
           ...acc,
           ...utterance.variables.reduce((acc_, variable) => {
+            const entity = entities.find(entity => entity.id === variable.entity);
+            if (typeof entity === "undefined") {
+              return acc_;
+            }
             return {
               ...acc_,
               // reduce on dynamic key names for sake of uniqueness
               [variable.name.replace(/%/g, "")]: {
-                type: entities.find(entity => entity.id === variable.entity)
-                  .name,
+                type: entity.name,
                 samples: intent.utterances
                   .filter(
                     utterance =>
                       utterance.variables.length > 0 &&
                       utterance.variables.some(({ name }) => variable.name)
                   )
-                  .map(utterance =>
-                    symmetricWrap(utterance.text, { l: "{", r: "}" })
-                  ),
+                  .map(utterance => symmetricWrap(utterance.text, { l: "{", r: "}" })),
               },
             };
           }, {}),

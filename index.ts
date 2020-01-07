@@ -4,23 +4,9 @@ import { sep, basename, join } from "path";
 import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
 
 export type ProjectResponse = {
-  errors?: { error: string }[];
+  errors?: { error: string; }[];
   data: any[];
 };
-
-const MIN_NODE_VERSION = 101600;
-const numericalNodeVersion = parseInt(
-  process.version
-    .slice(1)
-    .split(".")
-    .map(seq => seq.padStart(2, "0"))
-    .join(""),
-  10
-);
-
-if (numericalNodeVersion < MIN_NODE_VERSION) {
-  throw new Error("this script requires node.js version 10.16.0 or greater");
-}
 
 export const outputPath = join(__dirname, process.argv[2] || "output");
 
