@@ -8,7 +8,7 @@ Generates an [Alexa Interaction Model](https://developer.amazon.com/docs/smapi/i
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/en/) >= 10.16.x
+- [Node.js](https://nodejs.org/en/) >= 12.x
 
 ```shell
 node --version
