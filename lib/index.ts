@@ -1,7 +1,6 @@
 import uuid from "uuid/v4";
 import { symmetricWrap } from "@botmock-api/utils";
 import { DEFAULT_INTENTS } from "../templates";
-export { default as getProjectData } from "./client";
 
 type Slot = {
   name: string;
@@ -46,11 +45,8 @@ type Intent = Partial<{
   utterances?: { text: string; variables: any[]; }[];
 }>;
 
-export function mapProjectDataToInteractionModel(
-  data: ProjectPayload
-): InteractionModel {
-  const [intents, entities, , project] = data;
-  // define types as a map of entities
+export function mapProjectDataToInteractionModel(data: any): InteractionModel {
+  const { intents, entities, project } = data;
   const types = entities.map(entity => ({
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),

@@ -1,22 +1,41 @@
 # Botmock Skills Kit Export
 
-Generates an [Alexa Interaction Model](https://developer.amazon.com/docs/smapi/interaction-model-schema.html) from a Botmock project.
+> generate [Alexa Interaction Model](https://developer.amazon.com/docs/smapi/interaction-model-schema.html) from a Botmock project
 
-- Tutorial Video (Coming Soon)
-- Documentation (Coming Soon)
-- [Support Email](mailto:help@botmock.com)
+## Table of Contents
 
-## Prerequisites
+* [Overview](#overview)
+  * [Botmock project structure](#botmock-project-structure)
+  * [Prerequisites](#prerequisites)
+    * [nodejs](#nodejs)
+  * [Installation](#installation)
+    * [clone](#clone)
+    * [env](#env)
+  * [Commands](#commands)
+    * [start](#start)
+  * [Importing](#importing)
+    * [skill](#skill)
 
-- [Node.js](https://nodejs.org/en/) >= 12.x
+## Overview
+
+### Botmock project structure
+
+<!-- Intents on connectors in your original project are what break up the flow -->
+
+### Prerequisites
+
+#### NodeJS
+
+- [NodeJS](https://nodejs.org/en/) Version 12.x
 
 ```shell
+# check node version
 node --version
 ```
 
-- [Amazon Developer Portal Account](http://developer.amazon.com/)
+### Installation
 
-## Guide
+#### Clone
 
 Clone this repository and install dependencies:
 
@@ -28,27 +47,32 @@ cd botmock-skills-kit-export
 npm i
 ```
 
-Create `/.env` and fill in values for the following:
+#### Env
+
+Create `.env` in `/botmock-skills-kit-export` and fill in values for the following:
 
 ```shell
-BOTMOCK_TOKEN=@YOUR-BOTMOCK-TOKEN
-BOTMOCK_TEAM_ID=@YOUR-BOTMOCK-TEAM-ID
-BOTMOCK_BOARD_ID=@YOUR-BOTMOCK-BOARD-ID
-BOTMOCK_PROJECT_ID=@YOUR-BOTMOCK-PROJECT-ID
+BOTMOCK_TOKEN="TOKEN"
+BOTMOCK_TEAM_ID="TEAM_ID"
+BOTMOCK_BOARD_ID="BOARD_ID"
+BOTMOCK_PROJECT_ID="PROJECT_ID"
 ```
+
+To get your Botmock API token, follow the [guide](http://help.botmock.com/en/articles/2334581-developer-api).
+
+### Commands
+
+#### `start`
+
+Populates `/output` with `.json` file produced from your original project.
 
 ```shell
 npm start
 ```
 
-By default, the generated file appears in `/output`. This can be changed by including the
-path to the desired output directory after the `start` command:
+### Importing
 
-```shell
-npm start model
-```
-
-### Uploading the generated model in the Alexa developer console
+#### Skill
 
 Go to [your Alexa skills kit dashboard](https://developer.amazon.com/alexa/console/ask).
 
@@ -67,20 +91,3 @@ Click **Save Model**.
 Click **Build Model**.
 
 Upon success of the build, click **Utterance Profiler**.
-
-## Want to help?
-
-Found bugs or have some ideas to improve this integration? We'd love to to hear from you! You can start by submitting an issue at the [Issues](https://github.com/Botmock/botmock-skills-kit-export/issues) tab. If you want, feel free to submit a pull request and propose a change as well!
-
-### Submitting a Pull Request
-
-1. Start with creating an issue if possible, the more information, the better!
-2. Fork the Repository
-3. Make a new change under a branch based on master. Ideally, the branch should be based on the issue you made such as "issue-530"
-4. Send the Pull Request, followed by a brief description of the changes you've made. Reference the issue.
-
-_NOTE: Make sure to leave any sensitive information out of an issue when reporting a bug with imagery or copying and pasting error data. We want to make sure all your info is safe!_
-
-## License
-
-Botmock Skills Kit Export is copyright © 2019 Botmock. It is free software, and may be redistributed under the terms specified in the LICENSE file.

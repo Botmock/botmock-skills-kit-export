@@ -1,0 +1,4 @@
+{
+  "message": "data is not iterable",
+  "stack": "TypeError: data is not iterable\n    at Object.mapProjectDataToInteractionModel (/Users/admin/botmock-skills-kit-export/lib/index.ts:51:42)\n    at main (/Users/admin/botmock-skills-kit-export/index.ts:45:28)\n    at processTicksAndRejections (internal/process/task_queues.js:93:5)"
+}
