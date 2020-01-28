@@ -2,48 +2,23 @@ import uuid from "uuid/v4";
 import { symmetricWrap } from "@botmock-api/utils";
 import { DEFAULT_INTENTS } from "../templates";
 
-type Slot = {
-  name: string;
-  type?: string;
-  elicitationRequired?: boolean;
-  confirmationRequired?: boolean;
-  prompts?: { elicitation: string; };
-  validations?: { type: string; prompt: string; values?: string[]; }[];
-  samples?: string[];
-};
-
-type Slots = Slot[];
-
-type DialogIntent = {
-  name: string;
-  samples: string[];
-  delegationStrategy?: string;
-  elicitationRequired?: boolean;
-  confirmationRequired?: boolean;
-  prompts?: {};
-  slots?: Slots;
-};
-
-type Prompt = { id: string; variations: { type: string; value: string; }[]; };
+enum DelegationStrategies {
+  ALWAYS = "ALWAYS",
+  SKILL_RESPONSE = "SKILL_RESPONSE",
+}
 
 type InteractionModel = {
   languageModel: {
     invocationName: string;
-    intents?: Partial<DialogIntent>[];
+    intents?: any[];
     types?: { values: { name: { value: string; synonyms: string[]; }; }[]; }[];
   };
   dialog?: {
     delegationStrategy?: string;
-    intents: DialogIntent[];
+    intents: any[];
   };
-  prompts?: Prompt[];
+  prompts?: any;
 };
-
-type ProjectPayload = Readonly<any[]>;
-
-type Intent = Partial<{
-  utterances?: { text: string; variables: any[]; }[];
-}>;
 
 export function mapProjectDataToInteractionModel(data: any): InteractionModel {
   const { intents, entities, project } = data;
@@ -51,9 +26,8 @@ export function mapProjectDataToInteractionModel(data: any): InteractionModel {
     name: entity.name,
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
-  // define slots as a map of each unique variable appearing in the
-  // utterances for this intent
-  const getSlotsForIntent = (intent: Intent): Slots => {
+  // define slots as a map of each unique variable appearing in the utterances for this intent
+  const getSlotsForIntent = (intent: any): any[] => {
     const uniqueSlots = intent.utterances
       .filter(utterance => utterance.variables.length > 0)
       .reduce(
@@ -104,7 +78,7 @@ export function mapProjectDataToInteractionModel(data: any): InteractionModel {
   const prompts = intents
     .map(getSlotsForIntent)
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
-    .map((slotsWithSamples: Slot[]) => {
+    .map((slotsWithSamples: any[]) => {
       const [slot] = slotsWithSamples;
       return {
         id: `Elicit.Slot.${uuid()}`,
@@ -132,14 +106,14 @@ export function mapProjectDataToInteractionModel(data: any): InteractionModel {
       types,
     },
     dialog: {
-      delegationStrategy: "SKILL_RESPONSE",
+      delegationStrategy: DelegationStrategies.SKILL_RESPONSE,
       intents: intents
         .filter(intent =>
           intent.utterances.some(utterance => utterance.variables.length > 0)
         )
         .map(intent => ({
           name: intent.name,
-          delegationStrategy: "ALWAYS",
+          delegationStrategy: DelegationStrategies.ALWAYS,
           confirmationRequired: false,
           elicitationRequired: true,
           prompts: {},

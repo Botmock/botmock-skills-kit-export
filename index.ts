@@ -41,7 +41,6 @@ async function main(args: string[]): Promise<void> {
     "entities",
     "variables"
   ]);
-  // @ts-ignore
   const interactionModel = mapProjectDataToInteractionModel(projectData);
   await writeJson(join(outputDirectory, "en-US.json"), { interactionModel }, { EOL, spaces: 2 });
   log("done")

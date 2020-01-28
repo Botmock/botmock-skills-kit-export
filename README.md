@@ -20,8 +20,6 @@
 
 ### Botmock project structure
 
-<!-- Intents on connectors in your original project are what break up the flow -->
-
 ### Prerequisites
 
 #### NodeJS
