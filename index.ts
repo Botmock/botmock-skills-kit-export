@@ -29,6 +29,7 @@ async function main(args: string[]): Promise<void> {
   log("creating output directories");
   await recreateOutputDirectories({ outputPath: outputDirectory, });
   log("fetching project data");
+  // @ts-ignore
   const { data: projectData } = await new Batcher({
     token: process.env.BOTMOCK_TOKEN as string,
     teamId: process.env.BOTMOCK_TEAM_ID as string,
