@@ -1,69 +1,53 @@
 import uuid from "uuid/v4";
 import { symmetricWrap } from "@botmock-api/utils";
 import { DEFAULT_INTENTS } from "../templates";
-export { default as getProjectData } from "./client";
 
-type Slot = {
-  name: string;
-  type?: string;
-  elicitationRequired?: boolean;
-  confirmationRequired?: boolean;
-  prompts?: { elicitation: string; };
-  validations?: { type: string; prompt: string; values?: string[]; }[];
-  samples?: string[];
-};
+enum DelegationStrategies {
+  ALWAYS = "ALWAYS",
+  SKILL_RESPONSE = "SKILL_RESPONSE",
+}
 
-type Slots = Slot[];
+type ObjectLike<T> = { [resourceName: string]: T; };
 
-type DialogIntent = {
-  name: string;
-  samples: string[];
-  delegationStrategy?: string;
-  elicitationRequired?: boolean;
-  confirmationRequired?: boolean;
-  prompts?: {};
-  slots?: Slots;
-};
-
-type Prompt = { id: string; variations: { type: string; value: string; }[]; };
-
-type InteractionModel = {
-  languageModel: {
-    invocationName: string;
-    intents?: Partial<DialogIntent>[];
-    types?: { values: { name: { value: string; synonyms: string[]; }; }[]; }[];
+export namespace SkillsKit {
+  export type InteractionModel = {
+    languageModel: {
+      invocationName: string;
+      intents?: any[];
+      types?: { values: { name: { value: string; synonyms: string[]; }; }[]; }[];
+    };
+    dialog?: {
+      delegationStrategy?: string;
+      intents: any[];
+    };
+    prompts?: any;
   };
-  dialog?: {
-    delegationStrategy?: string;
-    intents: DialogIntent[];
-  };
-  prompts?: Prompt[];
-};
+}
 
-type ProjectPayload = Readonly<any[]>;
-
-type Intent = Partial<{
-  utterances?: { text: string; variables: any[]; }[];
-}>;
-
-export function mapProjectDataToInteractionModel(
-  data: ProjectPayload
-): InteractionModel {
-  const [intents, entities, , project] = data;
-  // define types as a map of entities
+/**
+ * @param data public API response payload
+ * @returns an interaction model
+ */
+export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsKit.InteractionModel {
+  const { intents, entities, project } = data;
+  // @ts-ignore
   const types = entities.map(entity => ({
-    name: entity.name,
+    name: entity.name.trim().replace(/\s/g, ""),
+    // @ts-ignore
     values: entity.data.map(({ value }) => ({ name: { value } })),
   }));
-  // define slots as a map of each unique variable appearing in the
-  // utterances for this intent
-  const getSlotsForIntent = (intent: Intent): Slots => {
+  // define slots as a map of each unique variable appearing in the utterances for this intent
+  const getSlotsForIntent = (intent: any): any[] => {
     const uniqueSlots = intent.utterances
+      // @ts-ignore
       .filter(utterance => utterance.variables.length > 0)
       .reduce(
+        // @ts-ignore
         (acc, utterance) => ({
           ...acc,
+          // @ts-ignore
           ...utterance.variables.reduce((acc_, variable) => {
+            // @ts-ignore
             const entity = entities.find(entity => entity.id === variable.entity);
             if (typeof entity === "undefined") {
               return acc_;
@@ -75,11 +59,12 @@ export function mapProjectDataToInteractionModel(
                 type: entity.name,
                 samples: intent.utterances
                   .filter(
+                    // @ts-ignore
                     utterance =>
                       utterance.variables.length > 0 &&
-                      utterance.variables.some(({ name }) => variable.name)
+                      utterance.variables.some((variable: any) => variable.name)
                   )
-                  .map(utterance => symmetricWrap(utterance.text, { l: "{", r: "}" })),
+                  .map((utterance: ObjectLike<any>) => symmetricWrap(utterance.text, { l: "{", r: "}" })),
               },
             };
           }, {}),
@@ -88,7 +73,6 @@ export function mapProjectDataToInteractionModel(
       );
     return (
       Object.keys(uniqueSlots)
-        // map the unique variables back to the correct format
         .map(name => {
           const { type, samples } = uniqueSlots[name];
           return {
@@ -102,16 +86,17 @@ export function mapProjectDataToInteractionModel(
   // correctly format a string to prevent build errors
   const stripUnallowedCharactersFromString = (str: string): string =>
     str
-      .replace(/!|,|_|alexa/gi, "")
-      .toLowerCase()
+      .replace(/!|,|_|-|alexa|\?/gi, "")
       .trim();
   const prompts = intents
     .map(getSlotsForIntent)
+    // @ts-ignore
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
-    .map((slotsWithSamples: Slot[]) => {
+    .map((slotsWithSamples: any[]) => {
       const [slot] = slotsWithSamples;
       return {
         id: `Elicit.Slot.${uuid()}`,
+        // @ts-ignore
         variations: slot.samples.map(sample => ({
           type: "PlainText",
           value: sample,
@@ -120,11 +105,13 @@ export function mapProjectDataToInteractionModel(
     });
   return {
     languageModel: {
-      invocationName: stripUnallowedCharactersFromString(project.name),
+      invocationName: stripUnallowedCharactersFromString(project.name).toLowerCase(),
       // join the default amazon intents with the mapped project intents
       intents: DEFAULT_INTENTS.concat(
+        // @ts-ignore
         intents.map(intent => ({
           name: intent.name,
+          // @ts-ignore
           samples: intent.utterances.map(utterance =>
             stripUnallowedCharactersFromString(
               symmetricWrap(utterance.text, { l: "{", r: "}" })
@@ -136,14 +123,17 @@ export function mapProjectDataToInteractionModel(
       types,
     },
     dialog: {
-      delegationStrategy: "SKILL_RESPONSE",
+      delegationStrategy: DelegationStrategies.SKILL_RESPONSE,
       intents: intents
+        // @ts-ignore
         .filter(intent =>
+          // @ts-ignore
           intent.utterances.some(utterance => utterance.variables.length > 0)
         )
+        // @ts-ignore
         .map(intent => ({
           name: intent.name,
-          delegationStrategy: "ALWAYS",
+          delegationStrategy: DelegationStrategies.ALWAYS,
           confirmationRequired: false,
           elicitationRequired: true,
           prompts: {},
@@ -155,15 +145,19 @@ export function mapProjectDataToInteractionModel(
             // reduce over the prompt that contains an utterance of this slot
             prompts:
               (
+                // @ts-ignore
                 prompts.filter(prompt => {
                   return prompt.variations
+                    // @ts-ignore
                     .map(variation => variation.value)
                     .some(
+                      // @ts-ignore
                       variation =>
                         typeof variation === "string" &&
                         variation.includes(`{${slot.name}}`)
                     );
                 }) || []
+                // @ts-ignore
               ).reduce((acc, prompt) => {
                 return { ...acc, elicitation: prompt.id };
               }, {}) || {},

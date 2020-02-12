@@ -1,43 +1,60 @@
 import "dotenv/config";
-import fs from "fs";
-import { sep, basename, join } from "path";
-import { getProjectData, mapProjectDataToInteractionModel } from "./lib";
+import { join } from "path";
+import { EOL } from "os";
+import { writeJson, remove, mkdirp } from "fs-extra";
+import { Batcher } from "@botmock-api/client";
+import { default as log } from "@botmock-api/log";
+import { mapProjectDataToInteractionModel } from "./lib";
 
-export type ProjectResponse = {
-  errors?: { error: string; }[];
-  data: any[];
-};
-
-export const outputPath = join(__dirname, process.argv[2] || "output");
-
-try {
-  (async () => {
-    const project: ProjectResponse = await getProjectData({
-      projectId: process.env.BOTMOCK_PROJECT_ID,
-      boardId: process.env.BOTMOCK_BOARD_ID,
-      teamId: process.env.BOTMOCK_TEAM_ID,
-      token: process.env.BOTMOCK_TOKEN,
-    });
-    // try to read from the output path; if possible, we do not need to create it
-    try {
-      await fs.promises.access(outputPath, fs.constants.R_OK);
-    } catch (_) {
-      await fs.promises.mkdir(outputPath);
-    }
-    const interactionModel = mapProjectDataToInteractionModel(project.data);
-    const filePath = join(outputPath, "en-US.json");
-    await fs.promises.writeFile(
-      filePath,
-      JSON.stringify({ interactionModel }, null, 2)
-    );
-    const { size } = await fs.promises.stat(filePath);
-    console.log(
-      `Completed writing interaction model to ${sep}${basename(
-        outputPath
-      )} (${size / 1000}kB)`
-    );
-  })();
-} catch (err) {
-  console.error(err);
-  process.exit(1);
+interface Paths {
+  readonly outputPath: string;
 }
+
+/**
+ * Removes and then creates the directories that hold generated files
+ * @param paths object containing paths to directories that will hold files
+ */
+async function recreateOutputDirectories(paths: Paths): Promise<void> {
+  const { outputPath } = paths;
+  await remove(outputPath);
+  await mkdirp(outputPath);
+}
+
+async function main(args: string[]): Promise<void> {
+  const DEFAULT_OUTPUT = "output";
+  let [, , outputDirectory] = args;
+  if (typeof outputDirectory === "undefined") {
+    outputDirectory = process.env.OUTPUT_DIR || DEFAULT_OUTPUT;
+  }
+  log("creating output directories");
+  await recreateOutputDirectories({ outputPath: outputDirectory, });
+  log("fetching project data");
+  // @ts-ignore
+  const { data: projectData } = await new Batcher({
+    token: process.env.BOTMOCK_TOKEN as string,
+    teamId: process.env.BOTMOCK_TEAM_ID as string,
+    projectId: process.env.BOTMOCK_PROJECT_ID as string,
+    boardId: process.env.BOTMOCK_BOARD_ID as string,
+  }).batchRequest([
+    "project",
+    "board",
+    "intents",
+    "entities",
+    "variables"
+  ]);
+  const interactionModel = mapProjectDataToInteractionModel(projectData);
+  await writeJson(join(outputDirectory, "en-US.json"), { interactionModel }, { EOL, spaces: 2 });
+  log("done")
+}
+
+process.on("unhandledRejection", () => { });
+process.on("uncaughtException", () => { });
+
+main(process.argv).catch(async (err: Error) => {
+  log(err.stack as string, { isError: true });
+  if (process.env.OPT_IN_ERROR_REPORTING) {
+  } else {
+    const { message, stack } = err;
+    await writeJson(join(__dirname, "err.json"), { message, stack }, { EOL, spaces: 2 });
+  }
+});
