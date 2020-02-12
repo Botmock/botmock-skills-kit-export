@@ -108,11 +108,9 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
       invocationName: stripUnallowedCharactersFromString(project.name).toLowerCase(),
       // join the default amazon intents with the mapped project intents
       intents: DEFAULT_INTENTS.concat(
-        // @ts-ignore
-        intents.map(intent => ({
+        intents.map((intent: any) => ({
           name: intent.name,
-          // @ts-ignore
-          samples: intent.utterances.map(utterance =>
+          samples: intent.utterances.map((utterance: any) =>
             stripUnallowedCharactersFromString(
               symmetricWrap(utterance.text, { l: "{", r: "}" })
             )
