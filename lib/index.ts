@@ -1,6 +1,7 @@
 import uuid from "uuid/v4";
 import { symmetricWrap } from "@botmock-api/utils";
 import { DEFAULT_INTENTS } from "../templates";
+// import { Botmock } from "@botmock-api/client";
 
 enum DelegationStrategies {
   ALWAYS = "ALWAYS",
@@ -22,6 +23,14 @@ export namespace SkillsKit {
     };
     prompts?: any;
   };
+}
+
+export namespace Botmock {
+  export type Slot = {
+    samples: string[];
+  };
+  export type Intent = any;
+  export type Utterance = any;
 }
 
 /**
@@ -92,12 +101,11 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
     .map(getSlotsForIntent)
     // @ts-ignore
     .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
-    .map((slotsWithSamples: any[]) => {
+    .map((slotsWithSamples: Botmock.Slot[]) => {
       const [slot] = slotsWithSamples;
       return {
         id: `Elicit.Slot.${uuid()}`,
-        // @ts-ignore
-        variations: slot.samples.map(sample => ({
+        variations: slot.samples.map((sample: string) => ({
           type: "PlainText",
           value: sample,
         })),
@@ -106,11 +114,10 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
   return {
     languageModel: {
       invocationName: stripUnallowedCharactersFromString(project.name).toLowerCase(),
-      // join the default amazon intents with the mapped project intents
       intents: DEFAULT_INTENTS.concat(
         intents.map((intent: any) => ({
           name: intent.name,
-          samples: intent.utterances.map((utterance: any) =>
+          samples: intent.utterances.map((utterance: ObjectLike<string>) =>
             stripUnallowedCharactersFromString(
               symmetricWrap(utterance.text, { l: "{", r: "}" })
             )
@@ -123,13 +130,10 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
     dialog: {
       delegationStrategy: DelegationStrategies.SKILL_RESPONSE,
       intents: intents
-        // @ts-ignore
-        .filter(intent =>
-          // @ts-ignore
-          intent.utterances.some(utterance => utterance.variables.length > 0)
+        .filter((intent: Botmock.Intent) =>
+          intent.utterances.some((utterance: Botmock.Utterance) => utterance.variables.length > 0)
         )
-        // @ts-ignore
-        .map(intent => ({
+        .map((intent: Botmock.Intent) => ({
           name: intent.name,
           delegationStrategy: DelegationStrategies.ALWAYS,
           confirmationRequired: false,
@@ -143,8 +147,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
             // reduce over the prompt that contains an utterance of this slot
             prompts:
               (
-                // @ts-ignore
-                prompts.filter(prompt => {
+                prompts.filter((prompt: any) => {
                   return prompt.variations
                     // @ts-ignore
                     .map(variation => variation.value)
