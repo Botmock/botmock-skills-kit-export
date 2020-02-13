@@ -131,21 +131,8 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
               confirmationRequired: false,
               elicitationRequired: true,
               prompts:
-                // @ts-ignore
-                (
-                  prompts
-                    .filter((prompt: any) => {
-                      return prompt.variations
-                        .map((variation: ObjectLike<string>) => variation.value)
-                        .some(
-                          (variation: string | void) => (
-                            typeof variation === "string" &&
-                            variation.includes(`{${slot.name}}`)
-                          )
-                        );
-                    }) || []
-                )
-                  .reduce((acc: ObjectLike<string>, prompt: SkillsKit.Prompt) => {
+                prompts
+                  .reduce((acc: ObjectLike<string>, prompt: SkillsKit.Prompt): ObjectLike<any> => {
                     return {
                       ...acc,
                       elicitation: prompt.id
