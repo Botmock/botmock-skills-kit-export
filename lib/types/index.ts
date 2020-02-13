@@ -6,6 +6,13 @@ export enum DelegationStrategies {
 export type ObjectLike<T> = { [resourceName: string]: T; };
 
 export namespace SkillsKit {
+  export enum VariationTypes {
+    PLAIN = "PlainText",
+  }
+  export type Prompt = {
+    id: string;
+    variations: { type: string; value: string; }[];
+  };
   export type InteractionModel = {
     languageModel: {
       invocationName: string;
@@ -22,7 +29,10 @@ export namespace SkillsKit {
 
 export namespace Botmock {
   export type Slot = {
-    samples: string[];
+    id: string;
+    variable_id: string;
+    is_required: boolean;
+    prompt: string;
   };
   export type Entity = any;
   export type Intent = any;

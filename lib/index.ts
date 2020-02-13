@@ -10,6 +10,14 @@ import {
 } from "./types";
 
 /**
+ * @param str string to strip from
+ */
+const stripUnallowedCharactersFromString = (str: string): string =>
+  str
+    .replace(/!|,|_|-|alexa|\d+|\?/gi, "")
+    .trim();
+
+/**
  * @param data public API response payload
  * @returns an interaction model
  */
@@ -65,24 +73,27 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
         })
     );
   };
-  // correctly format a string to prevent build errors
-  const stripUnallowedCharactersFromString = (str: string): string =>
-    str
-      .replace(/!|,|_|-|alexa|\d+|\?/gi, "")
-      .trim();
-  const prompts = intents
-    .map(getSlotsForIntent)
-    .filter((slot: any) => slot.length > 0 && slot[0].samples.length > 0)
-    .map((slotsWithSamples: Botmock.Slot[]) => {
-      const [slot] = slotsWithSamples;
-      return {
-        id: `Elicit.Slot.${uuid()}`,
-        variations: slot.samples.map((sample: string) => ({
-          type: "PlainText",
-          value: sample,
-        })),
-      };
-    });
+  const prompts: SkillsKit.Prompt[] = intents
+    .filter((intent: Botmock.Intent) => (
+      (intent.slots ?? []).some((s: Botmock.Slot) => !!s.is_required)
+    ))
+    .reduce((acc: any[], intentWithRequiredSlot: Botmock.Intent) => {
+      const id = `Elicit.Slot.${uuid()}`;
+      const variations: SkillsKit.Prompt["variations"] = [];
+      for (const s of intentWithRequiredSlot.slots) {
+        variations.push({
+          type: SkillsKit.VariationTypes.PLAIN,
+          value: s.prompt,
+        });
+      }
+      return [
+        ...acc,
+        {
+          id,
+          variations,
+        }
+      ];
+    }, []);
   return {
     languageModel: {
       invocationName: stripUnallowedCharactersFromString(project.name).toLowerCase(),
@@ -120,6 +131,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
               confirmationRequired: false,
               elicitationRequired: true,
               prompts:
+                // @ts-ignore
                 (
                   prompts
                     .filter((prompt: any) => {
@@ -133,7 +145,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
                         );
                     }) || []
                 )
-                  .reduce((acc: ObjectLike<string>, prompt: ObjectLike<string>) => {
+                  .reduce((acc: ObjectLike<string>, prompt: SkillsKit.Prompt) => {
                     return {
                       ...acc,
                       elicitation: prompt.id
