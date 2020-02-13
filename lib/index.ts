@@ -1,4 +1,5 @@
 import uuid from "uuid/v4";
+import { default as log } from "@botmock-api/log";
 import { symmetricWrap } from "@botmock-api/utils";
 import { DEFAULT_INTENTS } from "../templates";
 import {
@@ -27,9 +28,12 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
           ...utterance.variables.reduce((acc_: ObjectLike<string>, variable: ObjectLike<String>) => {
             const entity = entities.find((entity: Botmock.Entity) => entity.id === variable.entity);
             if (typeof entity === "undefined") {
+              log(`
+                warning: could not locate entity for variable ${variable.id}
+                make sure this variable references a valid entity
+              `, { isError: true });
               return acc_;
             }
-            // Collect variable names and their entity and samples
             return {
               ...acc_,
               [variable.name.replace(/%/g, "")]: {
@@ -41,7 +45,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
                       utterance.variables.some((variable: any) => variable.name)
                   )
                   .map((utterance: ObjectLike<any>) => (
-                    symmetricWrap(utterance.text, { l: "{", r: "}" })
+                    symmetricWrap(utterance.text, { l: "{", r: "}" }).replace(/\d+/g, "")
                   )),
               },
             };
@@ -64,7 +68,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
   // correctly format a string to prevent build errors
   const stripUnallowedCharactersFromString = (str: string): string =>
     str
-      .replace(/!|,|_|-|alexa|\?/gi, "")
+      .replace(/!|,|_|-|alexa|\d+|\?/gi, "")
       .trim();
   const prompts = intents
     .map(getSlotsForIntent)
@@ -85,11 +89,13 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
       intents: DEFAULT_INTENTS.concat(
         intents.map((intent: any) => ({
           name: intent.name,
-          samples: intent.utterances.map((utterance: ObjectLike<string>) =>
-            stripUnallowedCharactersFromString(
-              symmetricWrap(utterance.text, { l: "{", r: "}" })
+          samples: intent.utterances
+            .map((utterance: ObjectLike<string>) =>
+              stripUnallowedCharactersFromString(
+                symmetricWrap(utterance.text, { l: "{", r: "}" })
+              )
             )
-          ),
+            .filter((text: string) => text.length > 0),
           slots: getSlotsForIntent(intent),
         }))
       ),
@@ -107,26 +113,33 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
           confirmationRequired: false,
           elicitationRequired: true,
           prompts: {},
-          slots: getSlotsForIntent(intent).map(slot => ({
-            name: slot.name,
-            type: slot.type,
-            confirmationRequired: false,
-            elicitationRequired: true,
-            prompts:
-              (
-                prompts.filter((prompt: any) => {
-                  return prompt.variations
-                    .map((variation: ObjectLike<string>) => variation.value)
-                    .some(
-                      (variation: string | void) =>
-                        typeof variation === "string" &&
-                        variation.includes(`{${slot.name}}`)
-                    );
-                }) || []
-              ).reduce((acc: ObjectLike<string>, prompt: ObjectLike<string>) => {
-                return { ...acc, elicitation: prompt.id };
-              }, {}) || {},
-          })),
+          slots: getSlotsForIntent(intent)
+            .map(slot => ({
+              name: slot.name,
+              type: slot.type,
+              confirmationRequired: false,
+              elicitationRequired: true,
+              prompts:
+                (
+                  prompts
+                    .filter((prompt: any) => {
+                      return prompt.variations
+                        .map((variation: ObjectLike<string>) => variation.value)
+                        .some(
+                          (variation: string | void) => (
+                            typeof variation === "string" &&
+                            variation.includes(`{${slot.name}}`)
+                          )
+                        );
+                    }) || []
+                )
+                  .reduce((acc: ObjectLike<string>, prompt: ObjectLike<string>) => {
+                    return {
+                      ...acc,
+                      elicitation: prompt.id
+                    };
+                  }, {}) || {},
+            })),
         })),
     },
     prompts,
