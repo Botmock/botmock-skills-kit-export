@@ -14,41 +14,35 @@ import {
  */
 export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsKit.InteractionModel {
   const { intents, entities, project } = data;
-  // @ts-ignore
-  const types = entities.map(entity => ({
+  const types = entities.map((entity: Botmock.Entity) => ({
     name: entity.name.trim().replace(/\s/g, ""),
-    // @ts-ignore
-    values: entity.data.map(({ value }) => ({ name: { value } })),
+    values: entity.data.map(({ value }: ObjectLike<string>) => ({ name: { value } })),
   }));
-  // define slots as a map of each unique variable appearing in the utterances for this intent
-  const getSlotsForIntent = (intent: any): any[] => {
-    const uniqueSlots = intent.utterances
-      // @ts-ignore
+  const getSlotsForIntent = (intent: any): ObjectLike<string>[] => {
+    const uniqueSlots = (intent.utterances as Botmock.Utterance[])
       .filter(utterance => utterance.variables.length > 0)
       .reduce(
-        // @ts-ignore
         (acc, utterance) => ({
           ...acc,
-          // @ts-ignore
-          ...utterance.variables.reduce((acc_, variable) => {
-            // @ts-ignore
-            const entity = entities.find(entity => entity.id === variable.entity);
+          ...utterance.variables.reduce((acc_: ObjectLike<string>, variable: ObjectLike<String>) => {
+            const entity = entities.find((entity: Botmock.Entity) => entity.id === variable.entity);
             if (typeof entity === "undefined") {
               return acc_;
             }
+            // Collect variable names and their entity and samples
             return {
               ...acc_,
-              // reduce on dynamic key names for sake of uniqueness
               [variable.name.replace(/%/g, "")]: {
                 type: entity.name,
                 samples: intent.utterances
                   .filter(
-                    // @ts-ignore
-                    utterance =>
+                    (utterance: Botmock.Utterance) =>
                       utterance.variables.length > 0 &&
                       utterance.variables.some((variable: any) => variable.name)
                   )
-                  .map((utterance: ObjectLike<any>) => symmetricWrap(utterance.text, { l: "{", r: "}" })),
+                  .map((utterance: ObjectLike<any>) => (
+                    symmetricWrap(utterance.text, { l: "{", r: "}" })
+                  )),
               },
             };
           }, {}),
@@ -74,8 +68,7 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
       .trim();
   const prompts = intents
     .map(getSlotsForIntent)
-    // @ts-ignore
-    .filter(slot => slot.length > 0 && slot[0].samples.length > 0)
+    .filter((slot: any) => slot.length > 0 && slot[0].samples.length > 0)
     .map((slotsWithSamples: Botmock.Slot[]) => {
       const [slot] = slotsWithSamples;
       return {
@@ -119,22 +112,18 @@ export function mapProjectDataToInteractionModel(data: ObjectLike<any>): SkillsK
             type: slot.type,
             confirmationRequired: false,
             elicitationRequired: true,
-            // reduce over the prompt that contains an utterance of this slot
             prompts:
               (
                 prompts.filter((prompt: any) => {
                   return prompt.variations
-                    // @ts-ignore
-                    .map(variation => variation.value)
+                    .map((variation: ObjectLike<string>) => variation.value)
                     .some(
-                      // @ts-ignore
-                      variation =>
+                      (variation: string | void) =>
                         typeof variation === "string" &&
                         variation.includes(`{${slot.name}}`)
                     );
                 }) || []
-                // @ts-ignore
-              ).reduce((acc, prompt) => {
+              ).reduce((acc: ObjectLike<string>, prompt: ObjectLike<string>) => {
                 return { ...acc, elicitation: prompt.id };
               }, {}) || {},
           })),

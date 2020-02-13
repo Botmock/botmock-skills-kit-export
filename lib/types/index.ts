@@ -24,6 +24,7 @@ export namespace Botmock {
   export type Slot = {
     samples: string[];
   };
+  export type Entity = any;
   export type Intent = any;
   export type Utterance = any;
 }
