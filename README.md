@@ -22,7 +22,7 @@ Running the following commands should allow you to generate restorable content f
 - `git clone git@github.com:Botmock/botmock-skills-kit-export.git`
 - `cd botmock-skills-kit-export`
 - `npm install`
-- `mv ./sample.env ./env` and edit `.env` to contain your token and project ids
+- `mv ./sample.env ./.env` and edit `.env` to contain your token and project ids
 - `npm start`
 
 `./output` should be generated in your project root.
